@@ -82,6 +82,7 @@ func main() {
 
 	// Public routes
 	// TODO: ensure shortcuts don't use these reserved routes (or split it onto a different router by host or port?)
+	r.Get("/healthz", s.handleHealthcheck)
 	r.Get("/", s.handleIndex)
 	r.Get("/login", s.handleGoogleLogin)
 	r.Get("/logout", s.handleLogout)
@@ -118,6 +119,10 @@ func main() {
 func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	// TODO
 	w.Write([]byte(`TODO: Redirect`))
+}
+
+func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(`OK`))
 }
 
 func (s *server) handleIndex(w http.ResponseWriter, r *http.Request) {
