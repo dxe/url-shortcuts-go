@@ -4,6 +4,8 @@ services:
     container_name: url-shortcuts
     build: .
     image: url-shortcuts
+    ports:
+      - 8080:8080
     restart: always
     environment:
       - BASE_URL=http://localhost:8080

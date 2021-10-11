@@ -81,10 +81,12 @@ func main() {
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	// Public routes
+	// TODO: ensure shortcuts don't use these reserved routes (or split it onto a different router by host or port?)
 	r.Get("/", s.handleIndex)
 	r.Get("/login", s.handleGoogleLogin)
 	r.Get("/logout", s.handleLogout)
 	r.Get("/auth/callback", s.handleGoogleCallback)
+	r.Get("/*", s.handleRedirect)
 
 	// Protected routes
 	r.Group(func(r chi.Router) {
@@ -113,7 +115,13 @@ func main() {
 	log.Fatalln(http.ListenAndServe(addr, r))
 }
 
+func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
+	// TODO
+	w.Write([]byte(`TODO: Redirect`))
+}
+
 func (s *server) handleIndex(w http.ResponseWriter, r *http.Request) {
+	// TODO: index should just redirect to homepage eventually
 	w.Write([]byte(`<a href="/login">Log in</a>`))
 }
 
