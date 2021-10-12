@@ -24,7 +24,7 @@ func GetRedirectURL(db *sqlx.DB, code string) (string, error) {
 	`
 
 	var shortcuts []Shortcut
-	if err := db.Select(&shortcuts, query); err != nil {
+	if err := db.Select(&shortcuts, query, code); err != nil {
 		return "", fmt.Errorf("failed to select shortcut: %w", err)
 	}
 	if shortcuts == nil {
