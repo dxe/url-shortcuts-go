@@ -118,7 +118,7 @@ func main() {
 
 func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	// TODO: ensure this is the correct way to get the code (may need to remove any url parameters, etc.)
-	code := r.URL.Path
+	code := r.URL.Path[1:]
 	log.Printf("Code from request: %v\n", code)
 
 	url, err := model.GetRedirectURL(s.db, code)
