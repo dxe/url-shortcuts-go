@@ -138,16 +138,6 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	// TODO: log a visit in the database
 }
 
-func joinURLValues(args ...url.Values) url.Values {
-	var output url.Values
-	for _, u := range args {
-		for k, v := range u {
-			output.Set(k, v[0])
-		}
-	}
-	return output
-}
-
 func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(`OK`))
 }
@@ -342,4 +332,14 @@ type User struct {
 	Email      string
 	Authorized bool
 	Admin      bool
+}
+
+func joinURLValues(args ...url.Values) url.Values {
+	output := make(url.Values, 0)
+	for _, u := range args {
+		for k, v := range u {
+			output.Set(k, v[0])
+		}
+	}
+	return output
 }
