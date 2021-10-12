@@ -2,6 +2,7 @@ package model
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -16,7 +17,7 @@ type Shortcut struct {
 	UpdatedBy string `db:"updated_by"`
 }
 
-func GetRedirectURL(db *sqlx.DB, code string) (string, error) {
+func GetRedirectURL(db *sqlx.DB, code string) (*url.URL, error) {
 	query := `
 		SELECT url
 		FROM shortcuts
@@ -25,10 +26,16 @@ func GetRedirectURL(db *sqlx.DB, code string) (string, error) {
 
 	var shortcuts []Shortcut
 	if err := db.Select(&shortcuts, query, code); err != nil {
-		return "", fmt.Errorf("failed to select shortcut: %w", err)
+		return nil, fmt.Errorf("failed to select shortcut: %w", err)
 	}
 	if shortcuts == nil {
-		return "", nil
+		return nil, nil
 	}
-	return shortcuts[0].URL, nil
+
+	path, err := url.Parse(shortcuts[0].URL)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse url: %w", err)
+	}
+
+	return path, nil
 }

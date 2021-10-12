@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -126,12 +127,14 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if url == "" {
+	if url == nil {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
-	// TODO: ensure that we forward the Referer header & any url parameters
-	http.Redirect(w, r, url, http.StatusFound)
+	// TODO: ensure that we forward the Referer header & any url parameter
+	queryParams := r.URL.Query()
+	url.RawQuery = strings.Join([]string{url.RawQuery, queryParams.Encode()}, "&")
+	http.Redirect(w, r, url.String(), http.StatusFound)
 	// TODO: log a visit in the database
 }
 
