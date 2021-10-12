@@ -117,8 +117,22 @@ func main() {
 }
 
 func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
-	// TODO
-	w.Write([]byte(`TODO: Redirect`))
+	// TODO: ensure this is the correct way to get the code (may need to remove any url parameters, etc.)
+	code := r.URL.Path
+	log.Printf("Code from request: %v\n", code)
+
+	url, err := model.GetRedirectURL(s.db, code)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+	if url == "" {
+		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		return
+	}
+	// TODO: ensure that we forward the Referer header & any url parameters
+	http.Redirect(w, r, url, http.StatusFound)
+	// TODO: log a visit in the database
 }
 
 func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
