@@ -9,6 +9,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
 	"time"
@@ -120,25 +121,31 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Path[1:]
 	log.Printf("Code from request: %v\n", code)
 
-	url, err := model.GetRedirectURL(s.db, code)
+	path, err := model.GetRedirectURL(s.db, code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if url == nil {
+	if path == nil {
 		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
 		return
 	}
 
-	queryParams := url.Query()
-	queryParamsToAdd := r.URL.Query()
-	for k, v := range queryParamsToAdd {
-		queryParams.Set(k, v[0])
-	}
-	url.RawQuery = queryParams.Encode()
+	path.RawQuery = joinURLValues(path.Query(), r.URL.Query()).Encode()
 	// TODO: ensure that we forward the Referer header
-	http.Redirect(w, r, url.String(), http.StatusFound)
+
+	http.Redirect(w, r, path.String(), http.StatusFound)
 	// TODO: log a visit in the database
+}
+
+func joinURLValues(args ...url.Values) url.Values {
+	var output url.Values
+	for _, u := range args {
+		for k, v := range u {
+			output.Set(k, v[0])
+		}
+	}
+	return output
 }
 
 func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
