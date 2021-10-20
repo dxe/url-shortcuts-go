@@ -82,6 +82,7 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
 
+	// TODO: modify these options if needed
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"*"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -180,8 +181,7 @@ func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) handleIndex(w http.ResponseWriter, r *http.Request) {
-	// TODO: index should just redirect to homepage eventually
-	w.Write([]byte(`<a href="/login">Log in</a>`))
+	http.Redirect(w, r, "/web/", http.StatusFound)
 }
 
 func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
