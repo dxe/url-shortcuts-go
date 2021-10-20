@@ -131,7 +131,7 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path.RawQuery = joinURLValues(path.Query(), r.URL.Query()).Encode()
+	path.RawQuery = buildQueryString(code, path.Query(), r.URL.Query())
 	// TODO: ensure that we forward the Referer header
 
 	http.Redirect(w, r, path.String(), http.StatusFound)
@@ -334,12 +334,13 @@ type User struct {
 	Admin      bool
 }
 
-func joinURLValues(args ...url.Values) url.Values {
+func buildQueryString(campaign string, args ...url.Values) string {
 	output := make(url.Values, 0)
 	for _, u := range args {
 		for k, v := range u {
 			output.Set(k, v[0])
 		}
 	}
-	return output
+	output.Set("utm_campaign", campaign)
+	return output.Encode()
 }
