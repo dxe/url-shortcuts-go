@@ -88,6 +88,15 @@ func main() {
 	r.Get("/login", s.handleGoogleLogin)
 	r.Get("/logout", s.handleLogout)
 	r.Get("/auth/callback", s.handleGoogleCallback)
+
+	// Frontend file hosting
+	// TODO: consider just using a subdomain for the frontend fileserver (might be hard for local development though)
+	webFS := http.StripPrefix("/web/", http.FileServer(http.Dir("./web")))
+	staticFS := http.StripPrefix("/static/", http.FileServer(http.Dir("./web/static")))
+	r.Get("/web/*", webFS.ServeHTTP)
+	r.Get("/static/*", staticFS.ServeHTTP)
+
+	// Redirect to whatever the short link points to
 	r.Get("/*", s.handleRedirect)
 
 	// Protected routes
@@ -100,6 +109,24 @@ func main() {
 		r.Get("/private", func(w http.ResponseWriter, r *http.Request) {
 			user := mustGetUserFromCtx(r.Context())
 			w.Write([]byte(fmt.Sprintf("This is a private page. Hi, %v.", user.Name)))
+		})
+
+		// TODO: maybe use subrouter or something here to avoid repeating "/api/shortcuts", etc.
+		r.Get("/api/shortcuts/list", func(w http.ResponseWriter, r *http.Request) {
+			//user := mustGetUserFromCtx(r.Context())
+			shortcuts, err := model.ListShortcuts(s.db)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			// TODO: refactor to have a reusable json function
+			w.Header().Set("Content-Type", "application/json")
+			b, err := json.Marshal(shortcuts)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+				return
+			}
+			w.Write(b)
 		})
 
 		// Admin routes
@@ -162,7 +189,7 @@ func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
 func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := nonce()
 	if err != nil {
-		w.Write([]byte("Error generating auth state cookie."))
+		http.Error(w, "Error generating auth state cookie: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	http.SetCookie(w, &http.Cookie{
@@ -180,11 +207,11 @@ func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie(cookieAuthState)
 	if err != nil {
-		w.Write([]byte("Error reading auth state cookie."))
+		http.Error(w, "Error reading auth state cookie: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 	if c.Value != r.FormValue("state") {
-		w.Write([]byte("State mismatch."))
+		http.Error(w, "State mismatch: "+err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -195,7 +222,8 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: check against the database to see if the user is an authorized user, admin, or unauthorized
+	// TODO: check against the database to see if the user is an authorized user, admin, or unauthorized.
+	// TODO: maybe also just let anyone through who has a @directactioneverywhere.com email address.
 	dummyUser := User{ // TODO: replace w/ real user from database
 		ID:         1,
 		Name:       "Jake Hobbs",
@@ -211,7 +239,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	// generate jwt
 	_, tokenString, err := s.tokenAuth.Encode(claims)
 	if err != nil {
-		w.Write([]byte("Failed to generate token."))
+		http.Error(w, "Failed to generate token: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -224,7 +252,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		Path:     "/",
 	})
 
-	w.Write([]byte(fmt.Sprintf("%+v", googleAcctInfo))) // TODO: replace w/ redirect since user is now logged in
+	http.Redirect(w, r, "/web", http.StatusFound)
 }
 
 func (s *server) getUserGoogleAcctInfo(ctx context.Context, code string) (GoogleAccountInfo, error) {
