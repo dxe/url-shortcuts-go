@@ -221,6 +221,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
+	log.Println(googleAcctInfo) // TODO: remove this after using the info
 
 	// TODO: check against the database to see if the user is an authorized user, admin, or unauthorized.
 	// TODO: maybe also just let anyone through who has a @directactioneverywhere.com email address.
