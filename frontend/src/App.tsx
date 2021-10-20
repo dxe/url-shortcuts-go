@@ -4,7 +4,7 @@ import './App.css';
 
 // TODO: move to env
 //const ROOT_PATH = "http://localhost:8080"
-const ROOT_PATH = "http://shortcuts.dxe.io"
+const ROOT_PATH = "https://shortcuts.dxe.io"
 
 const getShortcutsList = async () => {
   console.log("hello")
