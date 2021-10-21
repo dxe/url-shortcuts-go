@@ -10,10 +10,7 @@ const ROOT_PATH = "https://shortcuts.dxe.io"
 const getShortcutsList = async () => {
     try {
         const resp = await fetch(ROOT_PATH + "/api/shortcuts/list")
-        console.log(resp)
-        const body = await resp.json()
-        console.log(body)
-        return body
+        return resp.json()
     }
     catch(e) {
         console.error("Failed to load shortcuts.")
