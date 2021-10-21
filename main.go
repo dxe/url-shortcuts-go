@@ -380,6 +380,6 @@ func buildQueryString(campaign string, args ...url.Values) string {
 			output.Set(k, v[0])
 		}
 	}
-	output.Set("utm_campaign", campaign)
+	output.Set("utm_campaign", "dxe-io-"+campaign)
 	return output.Encode()
 }

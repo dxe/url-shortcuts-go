@@ -1,5 +1,4 @@
 import React, {useEffect, useState} from 'react';
-import logo from './logo.svg';
 import './App.css';
 import 'bulma/css/bulma.min.css';
 import { Button } from 'react-bulma-components';
@@ -9,12 +8,16 @@ import { Button } from 'react-bulma-components';
 const ROOT_PATH = "https://shortcuts.dxe.io"
 
 const getShortcutsList = async () => {
-  console.log("hello")
-  const resp = await fetch(ROOT_PATH + "/api/shortcuts/list")
-  console.log(resp)
-  const body = await resp.json()
-  console.log(body)
-  return body
+    try {
+        const resp = await fetch(ROOT_PATH + "/api/shortcuts/list")
+        console.log(resp)
+        const body = await resp.json()
+        console.log(body)
+        return body
+    }
+    catch(e) {
+        console.error("Failed to load shortcuts.")
+    }
 }
 
 function App() {
