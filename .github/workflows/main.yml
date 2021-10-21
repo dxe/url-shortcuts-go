@@ -19,4 +19,4 @@ jobs:
           repo: dxe/url-shortcuts
           region: us-west-2
           tags: latest,${{ github.sha }}
-          path: api
+          path: ./api
