@@ -84,7 +84,7 @@ func main() {
 
 	// TODO: modify these options if needed
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000"}, // TODO: use env? different for prod.
+		AllowedOrigins:   []string{"http://localhost:3000", "https://shortcuts.dxe.io"}, // TODO: use env?
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -253,7 +253,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		// Domain:   "shortcuts.dxe.io", // TODO: explore this option
 	})
 
-	http.Redirect(w, r, "http://localhost:3000", http.StatusFound) // TODO: not sure how this would even be allowed w/ cookies
+	http.Redirect(w, r, "localhost:3000", http.StatusFound) // TODO: use env?
 }
 
 func (s *server) getUserGoogleAcctInfo(ctx context.Context, code string) (GoogleAccountInfo, error) {

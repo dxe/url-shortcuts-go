@@ -4,8 +4,8 @@ import 'bulma/css/bulma.min.css';
 import {Button, Navbar} from 'react-bulma-components';
 
 // TODO: move to env
-//const ROOT_API_PATH = "http://localhost:8080"
-const ROOT_API_PATH = "https://shortcuts.dxe.io"
+const ROOT_API_PATH = "http://localhost:8080"
+//const ROOT_API_PATH = "https://shortcuts.dxe.io"
 
 const getShortcutsList = async () => {
     try {
