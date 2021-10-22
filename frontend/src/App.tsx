@@ -10,7 +10,6 @@ const ROOT_API_PATH = "http://localhost:8080"
 function App() {
   const [shortcuts, setShortcuts] = useState([]);
   const [navbarActive, setNavbarActive] = useState(false);
-  const [apiError, setApiError] = useState(false)
 
   const getShortcutsList = async () => {
     try {
@@ -19,12 +18,14 @@ function App() {
         mode: 'cors', // no-cors, *cors, same-origin
         credentials: 'include', // include, *same-origin, omit
       })
+      if (resp.status === 401) {
+        window.location.href = ROOT_API_PATH + "/login"
+        return
+      }
       return await resp.json()
     }
     catch(e) {
-      console.error("Failed to load shortcuts.")
-      // TODO: only show login button if status code is 4xx
-      setApiError(true)
+      alert("Failed to load shortcuts. Please try again.")
     }
   }
 
@@ -66,36 +67,28 @@ function App() {
           </Navbar.Menu>
       </Navbar>
 
-      {apiError ? (<Section><a href={ ROOT_API_PATH + "/login" }><Button color="primary">Log in</Button></a></Section>)
+      <Section>
+        <Heading>
+          Shortcuts
+        </Heading>
+        <Button color="">
+          Add new shortcut
+        </Button>
+      </Section>
 
-        : (
-          <div>
-            <Section>
-              <Heading>
-                Shortcuts
-              </Heading>
+      <Section>
+        {
+          shortcuts && shortcuts.map((s: any) => (
+            <Box style={{ maxWidth: 600, margin: 'auto', marginBottom: 10 }}>
+              <Heading size={4}>{s.Code}</Heading>
+              <Heading subtitle size={6}>{s.URL}</Heading>
               <Button color="">
-                Add new shortcut
+                Edit
               </Button>
-            </Section>
-
-            <Section>
-              {
-                shortcuts && shortcuts.map((s: any) => (
-                  <Box style={{ maxWidth: 600, margin: 'auto', marginBottom: 10 }}>
-                    <Heading size={4}>{s.Code}</Heading>
-                    <Heading subtitle size={6}>{s.URL}</Heading>
-                    <Button color="">
-                      Edit
-                    </Button>
-                  </Box>
-                ))
-              }
-            </Section>
-          </div>
-        )
-
-      }
+            </Box>
+          ))
+        }
+      </Section>
 
     </div>
   );
