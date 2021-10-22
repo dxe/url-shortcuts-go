@@ -1,7 +1,7 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'bulma/css/bulma.min.css';
-import {Button, Navbar, Heading, Section, Card, Content, Box} from 'react-bulma-components';
+import {Button, Navbar, Heading, Section, Card, Content, Box, Level, Form} from 'react-bulma-components';
 
 // TODO: move to env
 const ROOT_API_PATH = "http://localhost:8080"
@@ -68,12 +68,47 @@ function App() {
       </Navbar>
 
       <Section>
-        <Heading>
-          Shortcuts
-        </Heading>
-        <Button color="">
-          Add new shortcut
-        </Button>
+
+        <Box>
+          <Level>
+            <Level.Side>
+              <Level.Item>
+                <Heading
+                  size={5}
+                  subtitle
+                >
+                  <strong>
+                    Shortcuts
+                  </strong>
+                </Heading>
+              </Level.Item>
+              <Level.Item>
+                <Form.Field kind="addons">
+                  <Form.Control>
+                    <Form.Input placeholder="Find a shortcut" />
+                  </Form.Control>
+                  <Form.Control>
+                    <Button>
+                      Search
+                    </Button>
+                  </Form.Control>
+                </Form.Field>
+              </Level.Item>
+            </Level.Side>
+            <Level.Side align="right">
+              <Level.Item>
+                <Button
+                  color="success"
+                  renderAs="a"
+                >
+                  New
+                </Button>
+              </Level.Item>
+            </Level.Side>
+          </Level>
+
+        </Box>
+
       </Section>
 
       <Section>
