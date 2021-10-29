@@ -158,7 +158,8 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	if path == nil {
-		http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
+		path := "http://directactioneverywhere.com/" + code // TODO: move domain to env
+		http.Redirect(w,r, path, http.StatusFound)
 		return
 	}
 
