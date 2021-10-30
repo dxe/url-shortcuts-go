@@ -152,22 +152,37 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Path[1:]
 	log.Printf("Code from request: %v\n", code)
 
-	path, err := model.GetRedirectURL(s.db, code)
+	shortcut, err := model.GetShortcutByCode(s.db, code)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
-	if path == nil {
+	if shortcut.ID == 0 {
 		path := "http://directactioneverywhere.com/" + code // TODO: move domain to env
-		http.Redirect(w,r, path, http.StatusFound)
+		http.Redirect(w, r, path, http.StatusFound)
+		return
+	}
+
+	path, err := url.Parse(shortcut.URL)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	path.RawQuery = buildQueryString(code, path.Query(), r.URL.Query())
 	// TODO: ensure that we forward the Referer header
-
 	http.Redirect(w, r, path.String(), http.StatusFound)
-	// TODO: log a visit in the database
+
+	if err := model.InsertVisit(s.db, model.Visit{
+		ShortcutID: shortcut.ID,
+		IPAddress:  r.RemoteAddr,
+		Path:       r.URL.String(),
+		Referer:    r.Header.Get("Referer"),
+		UserAgent:  r.Header.Get("User-Agent"),
+	}); err != nil {
+		log.Println(err)
+	}
+
 }
 
 func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
