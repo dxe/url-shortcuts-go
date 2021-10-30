@@ -65,3 +65,17 @@ func UpdateUser(db *sqlx.DB, user User) error {
 
 	return nil
 }
+
+func DeleteUser(db *sqlx.DB, user User) error {
+	query := `
+		DELETE FROM users
+		WHERE id = :id
+	`
+
+	_, err := sqlx.NamedExec(db, query, user)
+	if err != nil {
+		return fmt.Errorf("error deleting user: %w", err)
+	}
+
+	return nil
+}

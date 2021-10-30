@@ -83,3 +83,17 @@ func UpdateShortcut(db *sqlx.DB, shortcut Shortcut) error {
 
 	return nil
 }
+
+func DeleteShortcut(db *sqlx.DB, shortcut Shortcut) error {
+	query := `
+		DELETE FROM shortcuts
+		WHERE id = :id
+	`
+
+	_, err := sqlx.NamedExec(db, query, shortcut)
+	if err != nil {
+		return fmt.Errorf("error deleting shortcut: %w", err)
+	}
+
+	return nil
+}
