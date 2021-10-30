@@ -51,3 +51,35 @@ func ListShortcuts(db *sqlx.DB) ([]Shortcut, error) {
 
 	return shortcuts, nil
 }
+
+func InsertShortcut(db *sqlx.DB, shortcut Shortcut) error {
+	query := `
+		INSERT INTO shortcuts (code, url, created_by, updated_by)
+		VALUES (:code, :url, :created_by, :updated_by) 
+	`
+
+	_, err := sqlx.NamedExec(db, query, shortcut)
+	if err != nil {
+		return fmt.Errorf("error inserting shortcut: %w", err)
+	}
+
+	return nil
+}
+
+func UpdateShortcut(db *sqlx.DB, shortcut Shortcut) error {
+	query := `
+		UPDATE shortcuts
+		SET code = :code,
+		    url = :url,
+		    updated = CURRENT_TIMESTAMP,
+		    updated_by = :updated_by
+		WHERE id = :id
+	`
+
+	_, err := sqlx.NamedExec(db, query, shortcut)
+	if err != nil {
+		return fmt.Errorf("error updating shortcut: %w", err)
+	}
+
+	return nil
+}
