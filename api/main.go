@@ -87,7 +87,7 @@ func main() {
 	})
 
 	// Protected API routes
-	r.Mount("/api", s.apiRouter())
+	r.Route("/api", s.apiRouter)
 
 	// Redirect to whatever the short link points to
 	r.Get("/*", s.handleRedirect)
@@ -97,8 +97,7 @@ func main() {
 	log.Fatalln(http.ListenAndServe(addr, r))
 }
 
-func (s *server) apiRouter() http.Handler {
-	r := chi.NewRouter()
+func (s *server) apiRouter(r chi.Router) {
 	r.Use(jwtauth.Verifier(s.tokenAuth))
 	r.Use(jwtauth.Authenticator)
 	r.Use(userCtx)
@@ -118,8 +117,6 @@ func (s *server) apiRouter() http.Handler {
 		r.Patch("/{id}", s.updateUser)
 		r.Delete("/{id}", s.deleteUser)
 	})
-
-	return r
 }
 
 func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
