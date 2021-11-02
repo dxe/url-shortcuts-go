@@ -84,7 +84,7 @@ func main() {
 
 	// TODO: modify these options if needed
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:3000", "https://shortcuts.dxe.io"}, // TODO: use env?
+		AllowedOrigins:   []string{"http://localhost:8080", "https://shortcuts.dxe.io"}, // TODO: use env?
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -109,14 +109,8 @@ func main() {
 		r.Use(userCtx)
 		r.Use(userAuthorizer)
 
-		// TODO: remove this route
-		r.Get("/private", func(w http.ResponseWriter, r *http.Request) {
-			user := mustGetUserFromCtx(r.Context())
-			w.Write([]byte(fmt.Sprintf("This is a private page. Hi, %v.", user.Name)))
-		})
-
 		// TODO: maybe use subrouter or something here to avoid repeating "/api/shortcuts", etc.
-		r.Get("/api/shortcuts/list", func(w http.ResponseWriter, r *http.Request) {
+		r.Get("/api/shortcuts", func(w http.ResponseWriter, r *http.Request) {
 			//user := mustGetUserFromCtx(r.Context())
 			shortcuts, err := model.ListShortcuts(s.db)
 			if err != nil {
@@ -133,13 +127,214 @@ func main() {
 			w.Write(b)
 		})
 
+		r.Post("/api/shortcuts", func(w http.ResponseWriter, r *http.Request) {
+			user := mustGetUserFromCtx(r.Context())
+
+			// TODO: validate input data
+			var shortcut model.Shortcut
+			err := json.NewDecoder(r.Body).Decode(&shortcut)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			shortcut.CreatedBy, shortcut.UpdatedBy = user.ID, user.ID
+
+			id, err := model.InsertShortcut(s.db, shortcut)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// TODO: refactor to have a reusable json function
+			w.Header().Set("Content-Type", "application/json")
+			b, err := json.Marshal(map[string]interface{}{
+				"id": id,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+				return
+			}
+			w.Write(b)
+		})
+
+		r.Patch("/api/shortcuts/{id}", func(w http.ResponseWriter, r *http.Request) {
+			user := mustGetUserFromCtx(r.Context())
+
+			idParam := chi.URLParam(r, "id")
+			id, err := strconv.Atoi(idParam)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			// TODO: validate input data
+			var shortcut model.Shortcut
+			err = json.NewDecoder(r.Body).Decode(&shortcut)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			shortcut.ID = id
+			shortcut.UpdatedBy = user.ID
+
+			log.Println(shortcut)
+
+			err = model.UpdateShortcut(s.db, shortcut)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// TODO: refactor to have a reusable json function
+			w.Header().Set("Content-Type", "application/json")
+			b, err := json.Marshal(map[string]interface{}{
+				"id": id,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+				return
+			}
+			w.Write(b)
+		})
+
+		r.Delete("/api/shortcuts/{id}", func(w http.ResponseWriter, r *http.Request) {
+			idParam := chi.URLParam(r, "id")
+			id, err := strconv.Atoi(idParam)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			err = model.DeleteShortcut(s.db, model.Shortcut{ID: id})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+
+			// TODO: refactor to have a reusable json function
+			w.Header().Set("Content-Type", "application/json")
+			b, err := json.Marshal(map[string]interface{}{
+				"id": id,
+			})
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+				return
+			}
+			w.Write(b)
+		})
+
 		// Admin routes
 		r.Group(func(r chi.Router) {
 			r.Use(adminAuthorizer)
 
-			r.Get("/admin", func(w http.ResponseWriter, r *http.Request) {
-				w.Write([]byte("Hello, admin!"))
+			// TODO: maybe use subrouter or something here to avoid repeating "/api/users", etc.
+			r.Get("/api/users", func(w http.ResponseWriter, r *http.Request) {
+				users, err := model.ListUsers(s.db)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				// TODO: refactor to have a reusable json function
+				w.Header().Set("Content-Type", "application/json")
+				b, err := json.Marshal(users)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+					return
+				}
+				w.Write(b)
 			})
+
+			r.Post("/api/users", func(w http.ResponseWriter, r *http.Request) {
+				// TODO: validate input data
+				var user model.User
+				err := json.NewDecoder(r.Body).Decode(&user)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+
+				id, err := model.InsertUser(s.db, user)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				// TODO: refactor to have a reusable json function
+				w.Header().Set("Content-Type", "application/json")
+				b, err := json.Marshal(map[string]interface{}{
+					"id": id,
+				})
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+					return
+				}
+				w.Write(b)
+			})
+
+			r.Patch("/api/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+				idParam := chi.URLParam(r, "id")
+				id, err := strconv.Atoi(idParam)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+
+				// TODO: validate input data
+				var user model.User
+				err = json.NewDecoder(r.Body).Decode(&user)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+
+				user.ID = id
+
+				err = model.UpdateUser(s.db, user)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				// TODO: refactor to have a reusable json function
+				w.Header().Set("Content-Type", "application/json")
+				b, err := json.Marshal(map[string]interface{}{
+					"id": id,
+				})
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+					return
+				}
+				w.Write(b)
+			})
+
+			r.Delete("/api/users/{id}", func(w http.ResponseWriter, r *http.Request) {
+				idParam := chi.URLParam(r, "id")
+				id, err := strconv.Atoi(idParam)
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusBadRequest)
+					return
+				}
+
+				err = model.DeleteUser(s.db, model.User{ID: id})
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+
+				// TODO: refactor to have a reusable json function
+				w.Header().Set("Content-Type", "application/json")
+				b, err := json.Marshal(map[string]interface{}{
+					"id": id,
+				})
+				if err != nil {
+					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+					return
+				}
+				w.Write(b)
+			})
+
 		})
 	})
 
@@ -198,7 +393,7 @@ func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Name:   cookieJWT,
 		MaxAge: -1,
 	})
-	http.Redirect(w, r, "http://localhost:3000", http.StatusTemporaryRedirect) // TODO: move to env?
+	http.Redirect(w, r, "http://localhost:8080", http.StatusTemporaryRedirect) // TODO: move to env?
 }
 
 func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
@@ -236,19 +431,20 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return
 	}
-	log.Println(googleAcctInfo) // TODO: remove this after using the info
 
-	// TODO: check against the database to see if the user is an authorized user, admin, or unauthorized.
-	// TODO: maybe also just let anyone through who has a @directactioneverywhere.com email address.
-	dummyUser := User{ // TODO: replace w/ real user from database
-		ID:         1,
-		Name:       "Jake Hobbs",
-		Email:      "jake@dxe.io",
-		Authorized: true,
-		Admin:      true,
+	user, err := model.FindUserByEmail(s.db, googleAcctInfo.Email)
+	if err != nil {
+		http.Error(w, "Error finding user by email: "+err.Error(), http.StatusInternalServerError)
+		return
 	}
 
-	claims := map[string]interface{}{"user": dummyUser}
+	err = model.UpdateUserLastLoggedIn(s.db, user)
+	if err != nil {
+		http.Error(w, "Failed to update user last login time: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	claims := map[string]interface{}{"user": user}
 	jwtauth.SetExpiryIn(claims, 8*time.Hour)
 	jwtauth.SetIssuedNow(claims)
 
@@ -269,7 +465,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		// Domain:   "shortcuts.dxe.io", // TODO: explore this option
 	})
 
-	http.Redirect(w, r, "http://localhost:3000", http.StatusFound) // TODO: use env?
+	http.Redirect(w, r, "http://localhost:8080", http.StatusFound) // TODO: use env?
 }
 
 func (s *server) getUserGoogleAcctInfo(ctx context.Context, code string) (GoogleAccountInfo, error) {
@@ -308,7 +504,7 @@ func userCtx(next http.Handler) http.Handler {
 			http.Error(w, "Failed to marshal user object.", http.StatusInternalServerError)
 			return
 		}
-		var user User
+		var user model.User
 		if err := json.Unmarshal(jsonBody, &user); err != nil {
 			http.Error(w, "Failed to unmarshal user object.", http.StatusInternalServerError)
 			return
@@ -320,8 +516,8 @@ func userCtx(next http.Handler) http.Handler {
 	})
 }
 
-func mustGetUserFromCtx(ctx context.Context) User {
-	user, ok := ctx.Value("user").(User)
+func mustGetUserFromCtx(ctx context.Context) model.User {
+	user, ok := ctx.Value("user").(model.User)
 	if !ok {
 		panic("user not found in context")
 	}
@@ -332,7 +528,7 @@ func userAuthorizer(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		user := mustGetUserFromCtx(r.Context())
 
-		if !user.Authorized {
+		if !user.Active {
 			http.Error(w, "You are not authorized!", http.StatusUnauthorized)
 			return
 		}
@@ -368,15 +564,6 @@ type GoogleAccountInfo struct {
 	Name          string `json:"name"`
 	Email         string `json:"email"`
 	VerifiedEmail bool   `json:"verified_email"`
-}
-
-// TODO: move to model
-type User struct {
-	ID         int
-	Name       string
-	Email      string
-	Authorized bool
-	Admin      bool
 }
 
 func buildQueryString(campaign string, args ...url.Values) string {

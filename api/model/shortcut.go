@@ -13,7 +13,7 @@ type Shortcut struct {
 	CreatedAt string `db:"created"`
 	CreatedBy int    `db:"created_by"` // TODO: consider joining user table to get user name
 	UpdatedAt string `db:"updated"`
-	UpdatedBy string `db:"updated_by"`
+	UpdatedBy int    `db:"updated_by"`
 }
 
 func GetShortcutByCode(db *sqlx.DB, code string) (Shortcut, error) {
@@ -52,18 +52,23 @@ func ListShortcuts(db *sqlx.DB) ([]Shortcut, error) {
 	return shortcuts, nil
 }
 
-func InsertShortcut(db *sqlx.DB, shortcut Shortcut) error {
+func InsertShortcut(db *sqlx.DB, shortcut Shortcut) (int64, error) {
 	query := `
 		INSERT INTO shortcuts (code, url, created_by, updated_by)
 		VALUES (:code, :url, :created_by, :updated_by) 
 	`
 
-	_, err := sqlx.NamedExec(db, query, shortcut)
+	res, err := sqlx.NamedExec(db, query, shortcut)
 	if err != nil {
-		return fmt.Errorf("error inserting shortcut: %w", err)
+		return 0, fmt.Errorf("error inserting shortcut: %w", err)
 	}
 
-	return nil
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, fmt.Errorf("error getting id of inserted shortcut: %w", err)
+	}
+
+	return id, nil
 }
 
 func UpdateShortcut(db *sqlx.DB, shortcut Shortcut) error {
