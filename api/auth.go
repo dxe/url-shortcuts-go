@@ -30,7 +30,7 @@ func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
 		Name:   cookieJWT,
 		MaxAge: -1,
 	})
-	http.Redirect(w, r, "http://localhost:8080", http.StatusTemporaryRedirect) // TODO: move to env?
+	http.Redirect(w, r, "/", http.StatusTemporaryRedirect) // TODO: move to env?
 }
 
 func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
@@ -101,7 +101,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		// Domain:   "shortcuts.dxe.io", // TODO: explore this option
 	})
 
-	http.Redirect(w, r, "http://localhost:8080", http.StatusFound) // TODO: use env?
+	http.Redirect(w, r, "/shortcuts", http.StatusFound) // TODO: use env?
 }
 
 type GoogleAccountInfo struct {
