@@ -1,0 +1,9 @@
+version: "3.4"
+services:
+  url-shortcuts-frontend:
+    container_name: url-shortcuts-frontend
+    build: .
+    image: url-shortcuts-frontend
+    ports:
+      - 8090:80
+    restart: always
