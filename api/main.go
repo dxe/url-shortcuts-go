@@ -1,12 +1,7 @@
 package main
 
 import (
-	"context"
-	"crypto/rand"
-	"encoding/hex"
 	"encoding/json"
-	"fmt"
-	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -23,12 +18,6 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/jmoiron/sqlx"
-)
-
-// Cookie names.
-const (
-	cookieJWT       = "jwt"
-	cookieAuthState = "auth_state"
 )
 
 type server struct {
@@ -64,15 +53,11 @@ func main() {
 		Endpoint:     google.Endpoint,
 	}
 
-	tokenAuth := jwtauth.New("HS256", []byte(mustGetEnv("JWT_SECRET")), nil)
-
-	db := model.InitDBConn(mustGetEnv("DB_DSN"))
-
 	s := server{
 		port:              mustGetEnvInt("PORT"),
-		db:                db,
+		db:                model.InitDBConn(mustGetEnv("DB_DSN")),
 		googleOauthConfig: googleOauthConfig,
-		tokenAuth:         tokenAuth,
+		tokenAuth:         jwtauth.New("HS256", []byte(mustGetEnv("JWT_SECRET")), nil),
 	}
 
 	r := chi.NewRouter()
@@ -93,254 +78,52 @@ func main() {
 	}))
 
 	// Public routes
-	// TODO: ensure shortcuts don't use these reserved routes (or split it onto a different router by host or port?)
 	r.Get("/healthz", s.handleHealthcheck)
-	r.Get("/login", s.handleGoogleLogin)
-	r.Get("/logout", s.handleLogout)
-	r.Get("/auth/callback", s.handleGoogleCallback)
+
+	r.Route("/auth", func(r chi.Router) {
+		r.Get("/login", s.handleGoogleLogin)
+		r.Get("/logout", s.handleLogout)
+		r.Get("/callback", s.handleGoogleCallback)
+	})
+
+	// Protected API routes
+	r.Mount("/api", s.apiRouter())
 
 	// Redirect to whatever the short link points to
 	r.Get("/*", s.handleRedirect)
 
-	// Protected routes
-	r.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(tokenAuth))
-		r.Use(jwtauth.Authenticator)
-		r.Use(userCtx)
-		r.Use(userAuthorizer)
-
-		// TODO: maybe use subrouter or something here to avoid repeating "/api/shortcuts", etc.
-		r.Get("/api/shortcuts", func(w http.ResponseWriter, r *http.Request) {
-			//user := mustGetUserFromCtx(r.Context())
-			shortcuts, err := model.ListShortcuts(s.db)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-			// TODO: refactor to have a reusable json function
-			w.Header().Set("Content-Type", "application/json")
-			b, err := json.Marshal(shortcuts)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-				return
-			}
-			w.Write(b)
-		})
-
-		r.Post("/api/shortcuts", func(w http.ResponseWriter, r *http.Request) {
-			user := mustGetUserFromCtx(r.Context())
-
-			// TODO: validate input data
-			var shortcut model.Shortcut
-			err := json.NewDecoder(r.Body).Decode(&shortcut)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			shortcut.CreatedBy, shortcut.UpdatedBy = user.ID, user.ID
-
-			id, err := model.InsertShortcut(s.db, shortcut)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			// TODO: refactor to have a reusable json function
-			w.Header().Set("Content-Type", "application/json")
-			b, err := json.Marshal(map[string]interface{}{
-				"id": id,
-			})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-				return
-			}
-			w.Write(b)
-		})
-
-		r.Patch("/api/shortcuts/{id}", func(w http.ResponseWriter, r *http.Request) {
-			user := mustGetUserFromCtx(r.Context())
-
-			idParam := chi.URLParam(r, "id")
-			id, err := strconv.Atoi(idParam)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			// TODO: validate input data
-			var shortcut model.Shortcut
-			err = json.NewDecoder(r.Body).Decode(&shortcut)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			shortcut.ID = id
-			shortcut.UpdatedBy = user.ID
-
-			log.Println(shortcut)
-
-			err = model.UpdateShortcut(s.db, shortcut)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			// TODO: refactor to have a reusable json function
-			w.Header().Set("Content-Type", "application/json")
-			b, err := json.Marshal(map[string]interface{}{
-				"id": id,
-			})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-				return
-			}
-			w.Write(b)
-		})
-
-		r.Delete("/api/shortcuts/{id}", func(w http.ResponseWriter, r *http.Request) {
-			idParam := chi.URLParam(r, "id")
-			id, err := strconv.Atoi(idParam)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
-
-			err = model.DeleteShortcut(s.db, model.Shortcut{ID: id})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusInternalServerError)
-				return
-			}
-
-			// TODO: refactor to have a reusable json function
-			w.Header().Set("Content-Type", "application/json")
-			b, err := json.Marshal(map[string]interface{}{
-				"id": id,
-			})
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-				return
-			}
-			w.Write(b)
-		})
-
-		// Admin routes
-		r.Group(func(r chi.Router) {
-			r.Use(adminAuthorizer)
-
-			// TODO: maybe use subrouter or something here to avoid repeating "/api/users", etc.
-			r.Get("/api/users", func(w http.ResponseWriter, r *http.Request) {
-				users, err := model.ListUsers(s.db)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-				// TODO: refactor to have a reusable json function
-				w.Header().Set("Content-Type", "application/json")
-				b, err := json.Marshal(users)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-					return
-				}
-				w.Write(b)
-			})
-
-			r.Post("/api/users", func(w http.ResponseWriter, r *http.Request) {
-				// TODO: validate input data
-				var user model.User
-				err := json.NewDecoder(r.Body).Decode(&user)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-
-				id, err := model.InsertUser(s.db, user)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-
-				// TODO: refactor to have a reusable json function
-				w.Header().Set("Content-Type", "application/json")
-				b, err := json.Marshal(map[string]interface{}{
-					"id": id,
-				})
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-					return
-				}
-				w.Write(b)
-			})
-
-			r.Patch("/api/users/{id}", func(w http.ResponseWriter, r *http.Request) {
-				idParam := chi.URLParam(r, "id")
-				id, err := strconv.Atoi(idParam)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-
-				// TODO: validate input data
-				var user model.User
-				err = json.NewDecoder(r.Body).Decode(&user)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-
-				user.ID = id
-
-				err = model.UpdateUser(s.db, user)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-
-				// TODO: refactor to have a reusable json function
-				w.Header().Set("Content-Type", "application/json")
-				b, err := json.Marshal(map[string]interface{}{
-					"id": id,
-				})
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-					return
-				}
-				w.Write(b)
-			})
-
-			r.Delete("/api/users/{id}", func(w http.ResponseWriter, r *http.Request) {
-				idParam := chi.URLParam(r, "id")
-				id, err := strconv.Atoi(idParam)
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusBadRequest)
-					return
-				}
-
-				err = model.DeleteUser(s.db, model.User{ID: id})
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
-
-				// TODO: refactor to have a reusable json function
-				w.Header().Set("Content-Type", "application/json")
-				b, err := json.Marshal(map[string]interface{}{
-					"id": id,
-				})
-				if err != nil {
-					http.Error(w, err.Error(), http.StatusUnprocessableEntity)
-					return
-				}
-				w.Write(b)
-			})
-
-		})
-	})
-
 	addr := ":" + strconv.Itoa(s.port)
 	log.Printf("Server started. Listening on %v.", addr)
 	log.Fatalln(http.ListenAndServe(addr, r))
+}
+
+func (s *server) apiRouter() http.Handler {
+	r := chi.NewRouter()
+	r.Use(jwtauth.Verifier(s.tokenAuth))
+	r.Use(jwtauth.Authenticator)
+	r.Use(userCtx)
+	r.Use(userAuthorizer)
+
+	r.Route("/shortcuts", func(r chi.Router) {
+		r.Get("/", s.getShortcuts)
+		r.Post("/", s.createShortcut)
+		r.Patch("/{id}", s.updateShortcut)
+		r.Delete("/{id}", s.deleteShortcut)
+	})
+
+	r.Route("/users", func(r chi.Router) {
+		r.Use(adminAuthorizer)
+		r.Get("/", s.getUsers)
+		r.Post("/", s.createUser)
+		r.Patch("/{id}", s.updateUser)
+		r.Delete("/{id}", s.deleteUser)
+	})
+
+	return r
+}
+
+func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
+	w.Write([]byte(`OK`))
 }
 
 func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
@@ -380,192 +163,6 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte(`OK`))
-}
-
-func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
-	http.SetCookie(w, &http.Cookie{
-		Name:   cookieAuthState,
-		MaxAge: -1,
-	})
-	http.SetCookie(w, &http.Cookie{
-		Name:   cookieJWT,
-		MaxAge: -1,
-	})
-	http.Redirect(w, r, "http://localhost:8080", http.StatusTemporaryRedirect) // TODO: move to env?
-}
-
-func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
-	state, err := nonce()
-	if err != nil {
-		http.Error(w, "Error generating auth state cookie: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-	http.SetCookie(w, &http.Cookie{
-		Name:     cookieAuthState,
-		Value:    state,
-		Expires:  time.Now().Add(time.Minute * 1), // how long the user has to complete the authentication process
-		SameSite: http.SameSiteNoneMode,           // TODO: use Lax for prod
-		HttpOnly: true,
-		Path:     "/",
-	})
-	path := s.googleOauthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("prompt", "select_account"))
-	http.Redirect(w, r, path, http.StatusTemporaryRedirect)
-}
-
-func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
-	c, err := r.Cookie(cookieAuthState)
-	if err != nil {
-		http.Error(w, "Error reading auth state cookie: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-	if c.Value != r.FormValue("state") {
-		http.Error(w, "State mismatch: "+err.Error(), http.StatusBadRequest)
-		return
-	}
-
-	googleAcctInfo, err := s.getUserGoogleAcctInfo(r.Context(), r.FormValue("code"))
-	if err != nil {
-		fmt.Errorf("error getting user's google account info: %w", err)
-		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
-		return
-	}
-
-	user, err := model.FindUserByEmail(s.db, googleAcctInfo.Email)
-	if err != nil {
-		http.Error(w, "Error finding user by email: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	err = model.UpdateUserLastLoggedIn(s.db, user)
-	if err != nil {
-		http.Error(w, "Failed to update user last login time: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	claims := map[string]interface{}{"user": user}
-	jwtauth.SetExpiryIn(claims, 8*time.Hour)
-	jwtauth.SetIssuedNow(claims)
-
-	// generate jwt
-	_, tokenString, err := s.tokenAuth.Encode(claims)
-	if err != nil {
-		http.Error(w, "Failed to generate token: "+err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     cookieJWT,
-		Value:    tokenString,
-		Expires:  time.Now().Add(time.Hour * 8), // how long until user must log in again
-		SameSite: http.SameSiteNoneMode,         // TODO: use Lax for prod
-		HttpOnly: true,
-		Path:     "/",
-		// Domain:   "shortcuts.dxe.io", // TODO: explore this option
-	})
-
-	http.Redirect(w, r, "http://localhost:8080", http.StatusFound) // TODO: use env?
-}
-
-func (s *server) getUserGoogleAcctInfo(ctx context.Context, code string) (GoogleAccountInfo, error) {
-	var accountInfo GoogleAccountInfo
-
-	token, err := s.googleOauthConfig.Exchange(ctx, code)
-	if err != nil {
-		return accountInfo, fmt.Errorf("code exchange failed: %w", err)
-	}
-
-	response, err := http.Get("https://www.googleapis.com/oauth2/v2/userinfo?access_token=" + token.AccessToken)
-	if err != nil {
-		return accountInfo, fmt.Errorf("failed getting user info: %w", err)
-	}
-	defer response.Body.Close()
-
-	json.NewDecoder(response.Body).Decode(&accountInfo)
-
-	if !accountInfo.VerifiedEmail {
-		return accountInfo, fmt.Errorf("email address is not verified: %w", err)
-	}
-
-	return accountInfo, nil
-}
-
-func userCtx(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, claims, err := jwtauth.FromContext(r.Context())
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusUnauthorized)
-			return
-		}
-
-		jsonBody, err := json.Marshal(claims["user"])
-		if err != nil {
-			http.Error(w, "Failed to marshal user object.", http.StatusInternalServerError)
-			return
-		}
-		var user model.User
-		if err := json.Unmarshal(jsonBody, &user); err != nil {
-			http.Error(w, "Failed to unmarshal user object.", http.StatusInternalServerError)
-			return
-		}
-
-		ctx := context.WithValue(r.Context(), "user", user)
-
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
-
-func mustGetUserFromCtx(ctx context.Context) model.User {
-	user, ok := ctx.Value("user").(model.User)
-	if !ok {
-		panic("user not found in context")
-	}
-	return user
-}
-
-func userAuthorizer(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := mustGetUserFromCtx(r.Context())
-
-		if !user.Active {
-			http.Error(w, "You are not authorized!", http.StatusUnauthorized)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-func adminAuthorizer(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		user := mustGetUserFromCtx(r.Context())
-
-		if !user.Admin {
-			http.Error(w, "You are not an admin!", http.StatusUnauthorized)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
-// nonce returns a 256-bit random hex string.
-func nonce() (string, error) {
-	var buf [32]byte
-	if _, err := io.ReadFull(rand.Reader, buf[:]); err != nil {
-		return "", err
-	}
-	return hex.EncodeToString(buf[:]), nil
-}
-
-type GoogleAccountInfo struct {
-	ID            string `json:"id"`
-	Name          string `json:"name"`
-	Email         string `json:"email"`
-	VerifiedEmail bool   `json:"verified_email"`
-}
-
 func buildQueryString(campaign string, args ...url.Values) string {
 	output := make(url.Values, 0)
 	for _, u := range args {
@@ -575,4 +172,14 @@ func buildQueryString(campaign string, args ...url.Values) string {
 	}
 	output.Set("utm_campaign", "dxe-io-"+campaign)
 	return output.Encode()
+}
+
+func writeJSON(w http.ResponseWriter, data interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	b, err := json.Marshal(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusUnprocessableEntity)
+		return
+	}
+	w.Write(b)
 }
