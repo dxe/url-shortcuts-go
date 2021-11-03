@@ -1,11 +1,12 @@
 import React, {useEffect, useState} from 'react';
 import './App.css';
 import 'bulma/css/bulma.min.css';
-import {Button, Navbar, Heading, Section, Card, Content, Box, Level, Form} from 'react-bulma-components';
+import {Button, Navbar, Heading, Section, Box, Level, Form} from 'react-bulma-components';
 
 // TODO: move to env
-const ROOT_API_PATH = "http://localhost:8080"
-//const ROOT_API_PATH = "https://shortcuts.dxe.io"
+const ROOT_PATH = "https://dxe.io"
+const API_PATH = ROOT_PATH + "/api"
+const AUTH_PATH = ROOT_PATH + "/auth"
 
 function App() {
   const [shortcuts, setShortcuts] = useState([]);
@@ -13,13 +14,13 @@ function App() {
 
   const getShortcutsList = async () => {
     try {
-      const resp = await fetch(ROOT_API_PATH + "/api/shortcuts/list", {
+      const resp = await fetch(API_PATH + "/shortcuts", {
         // method: 'GET', // *GET, POST, PUT, DELETE, etc.
         mode: 'cors', // no-cors, *cors, same-origin
         credentials: 'include', // include, *same-origin, omit
       })
       if (resp.status === 401) {
-        window.location.href = ROOT_API_PATH + "/login"
+        window.location.href = AUTH_PATH + "/login"
         return
       }
       return await resp.json()
@@ -60,7 +61,7 @@ function App() {
                   </Navbar.Item>
               </Navbar.Container>
               <Navbar.Container align="right">
-                  <Navbar.Item href={ ROOT_API_PATH + "/logout" }>
+                  <Navbar.Item href={ AUTH_PATH + "/logout" }>
                       Log out
                   </Navbar.Item>
               </Navbar.Container>
