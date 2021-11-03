@@ -23,7 +23,8 @@ function App() {
         window.location.href = AUTH_PATH + "/login"
         return
       }
-      return await resp.json()
+      const body = await resp.json()
+      return body.shortcuts
     }
     catch(e) {
       alert("Failed to load shortcuts. Please try again.")
