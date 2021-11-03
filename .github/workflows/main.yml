@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build-api:
+  api:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -21,7 +21,7 @@ jobs:
           repo: dxe/url-shortcuts
           region: us-west-2
           tags: latest,${{ github.sha }}
-  build-frontend:
+  frontend:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
