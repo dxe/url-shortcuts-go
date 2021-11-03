@@ -1,8 +1,6 @@
 # url-shortcuts-go
 
-A URL shortening service written in Go.
-
-Changes pushed to main are automatically deployed to prod via GitHub Actions.
+A URL shortening service written in Go + React.
 
 ## Running locally
 ### API
@@ -11,3 +9,6 @@ Changes pushed to main are automatically deployed to prod via GitHub Actions.
 3. ```docker compose up --build```
 ### Frontend
 1. ```yarn start```.
+
+## Deployment
+Changes pushed to main are automatically deployed to prod via GitHub Actions.
