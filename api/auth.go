@@ -24,13 +24,15 @@ const (
 func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.SetCookie(w, &http.Cookie{
 		Name:   cookieAuthState,
+		Path:   "/",
 		MaxAge: -1,
 	})
 	http.SetCookie(w, &http.Cookie{
 		Name:   cookieJWT,
+		Path:   "/",
 		MaxAge: -1,
 	})
-	http.Redirect(w, r, "/", http.StatusTemporaryRedirect) // TODO: move to env?
+	http.Redirect(w, r, s.homepagePath(), http.StatusTemporaryRedirect)
 }
 
 func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
@@ -48,7 +50,7 @@ func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
 		Admin:  true,
 	}
 	s.issueJWTToken(mockUser, w)
-	http.Redirect(w, r, "http://localhost:3000", http.StatusFound) // TODO: use env?
+	http.Redirect(w, r, s.homepagePath(), http.StatusFound)
 }
 
 func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
@@ -64,7 +66,7 @@ func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 		SameSite: http.SameSiteLaxMode,            // TODO: ensure this works in prod
 		HttpOnly: true,
 		Path:     "/",
-		Secure:   true, // TODO: ensure this works in prod
+		Secure:   true,
 	})
 	path := s.googleOauthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("prompt", "select_account"))
 	http.Redirect(w, r, path, http.StatusTemporaryRedirect)
@@ -100,7 +102,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 	}
 
 	s.issueJWTToken(user, w)
-	http.Redirect(w, r, "/shortcuts", http.StatusFound) // TODO: use env?
+	http.Redirect(w, r, s.homepagePath(), http.StatusFound)
 }
 
 func (s *server) issueJWTToken(user model.User, w http.ResponseWriter) {
@@ -114,19 +116,14 @@ func (s *server) issueJWTToken(user model.User, w http.ResponseWriter) {
 		return
 	}
 
-	sameSite := http.SameSiteNoneMode
-	if s.prod {
-		sameSite = http.SameSiteLaxMode // TODO: ensure this works in prod
-	}
-
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieJWT,
 		Value:    tokenString,
 		Expires:  time.Now().Add(time.Hour * 8), // how long until user must log in again
-		SameSite: sameSite,
+		SameSite: http.SameSiteLaxMode,
 		HttpOnly: true,
 		Path:     "/",
-		Secure:   s.prod, // TODO: ensure this works in prod
+		Secure:   s.prod,
 	})
 }
 

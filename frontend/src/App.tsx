@@ -3,14 +3,14 @@ import './App.css';
 import 'bulma/css/bulma.min.css';
 import {Button, Navbar, Heading, Section, Box, Level, Form} from 'react-bulma-components';
 
-// TODO: move to env
-const ROOT_PATH = process.env.NODE_ENV === 'development' ? "http://localhost:8080" : "https://dxe.io"
+const ROOT_PATH = process.env.NODE_ENV === 'development' ? "http://localhost:8080" : "https://dxe.io" // TODO: use env?
 const API_PATH = ROOT_PATH + "/api"
 const AUTH_PATH = ROOT_PATH + "/auth"
 
 function App() {
   const [shortcuts, setShortcuts] = useState([]);
   const [navbarActive, setNavbarActive] = useState(false);
+  const [unauthorized, setUnauthorized] = useState(false);
 
   const getShortcutsList = async () => {
     try {
@@ -20,9 +20,10 @@ function App() {
         credentials: 'include', // include, *same-origin, omit
       })
       if (resp.status === 401) {
+        // TODO: consider just redirecting to the login page
         //window.location.href = AUTH_PATH + "/login"
-        // show a link to login instead of automatically redirecting
         console.log("User is not authorized.")
+        setUnauthorized(true)
         return
       }
       const body = await resp.json()
@@ -40,6 +41,10 @@ function App() {
       setShortcuts(shortcuts)
     })()
   }, [])
+
+  if (unauthorized) {
+    return (<div className="login-page-wrapper"><a href={AUTH_PATH + "/login"}>Log in</a></div>)
+  }
 
   return (
     <div className="page-wrapper">

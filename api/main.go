@@ -77,7 +77,7 @@ func main() {
 
 	// TODO: modify these options if needed
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://dxe.io", "http://localhost:3000"}, // TODO: ensure this works
+		AllowedOrigins:   []string{"https://dxe.io", "http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -187,4 +187,17 @@ func writeJSON(w http.ResponseWriter, data interface{}) {
 		return
 	}
 	w.Write(b)
+}
+
+func (s *server) homepagePath() string {
+	const (
+		// In prod, this redirects to the frontend server via the load balancer.
+		redirectPathProd = "/shortcuts"
+		// In development, this redirects to the React dev server.
+		redirectPathLocal = "http://localhost:3000" // TODO: move port to env
+	)
+	if s.prod {
+		return redirectPathProd
+	}
+	return redirectPathLocal
 }
