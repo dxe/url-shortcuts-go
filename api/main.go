@@ -69,7 +69,7 @@ func main() {
 
 	// TODO: modify these options if needed
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"http://localhost:8080", "https://shortcuts.dxe.io", "https://dxe.io"}, // TODO: use env?
+		AllowedOrigins:   []string{"*"}, // TODO: ensure this works
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
