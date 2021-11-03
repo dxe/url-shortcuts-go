@@ -7,6 +7,7 @@ import (
 	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
@@ -21,6 +22,7 @@ import (
 )
 
 type server struct {
+	prod              bool
 	port              int
 	db                *sqlx.DB
 	googleOauthConfig *oauth2.Config
@@ -44,6 +46,11 @@ func mustGetEnvInt(key string) int {
 	return x
 }
 
+func mustGetEnvBool(key string) bool {
+	v := mustGetEnv(key)
+	return strings.ToLower(v) == "true" || v == "1"
+}
+
 func main() {
 	googleOauthConfig := &oauth2.Config{
 		RedirectURL:  mustGetEnv("BASE_URL") + "/auth/callback",
@@ -54,6 +61,7 @@ func main() {
 	}
 
 	s := server{
+		prod:              mustGetEnvBool("PROD"),
 		port:              mustGetEnvInt("PORT"),
 		db:                model.InitDBConn(mustGetEnv("DB_DSN")),
 		googleOauthConfig: googleOauthConfig,
@@ -69,7 +77,7 @@ func main() {
 
 	// TODO: modify these options if needed
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"*"}, // TODO: ensure this works
+		AllowedOrigins:   []string{"https://dxe.io", "http://localhost:3000"}, // TODO: ensure this works
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -81,7 +89,7 @@ func main() {
 	r.Get("/healthz", s.handleHealthcheck)
 
 	r.Route("/auth", func(r chi.Router) {
-		r.Get("/login", s.handleGoogleLogin)
+		r.Get("/login", s.handleLogin)
 		r.Get("/logout", s.handleLogout)
 		r.Get("/callback", s.handleGoogleCallback)
 	})

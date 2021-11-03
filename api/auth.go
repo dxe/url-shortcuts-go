@@ -33,6 +33,24 @@ func (s *server) handleLogout(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusTemporaryRedirect) // TODO: move to env?
 }
 
+func (s *server) handleLogin(w http.ResponseWriter, r *http.Request) {
+	if s.prod {
+		s.handleGoogleLogin(w, r)
+		return
+	}
+
+	// Mock auth for development.
+	mockUser := model.User{
+		ID:     1,
+		Name:   "Dev Admin",
+		Email:  "admin@dxe.io",
+		Active: true,
+		Admin:  true,
+	}
+	s.issueJWTToken(mockUser, w)
+	http.Redirect(w, r, "http://localhost:3000", http.StatusFound) // TODO: use env?
+}
+
 func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 	state, err := nonce()
 	if err != nil {
@@ -43,9 +61,10 @@ func (s *server) handleGoogleLogin(w http.ResponseWriter, r *http.Request) {
 		Name:     cookieAuthState,
 		Value:    state,
 		Expires:  time.Now().Add(time.Minute * 1), // how long the user has to complete the authentication process
-		SameSite: http.SameSiteNoneMode,           // TODO: use Lax for prod
+		SameSite: http.SameSiteLaxMode,            // TODO: ensure this works in prod
 		HttpOnly: true,
 		Path:     "/",
+		Secure:   true, // TODO: ensure this works in prod
 	})
 	path := s.googleOauthConfig.AuthCodeURL(state, oauth2.SetAuthURLParam("prompt", "select_account"))
 	http.Redirect(w, r, path, http.StatusTemporaryRedirect)
@@ -80,28 +99,35 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	s.issueJWTToken(user, w)
+	http.Redirect(w, r, "/shortcuts", http.StatusFound) // TODO: use env?
+}
+
+func (s *server) issueJWTToken(user model.User, w http.ResponseWriter) {
 	claims := map[string]interface{}{"user": user}
 	jwtauth.SetExpiryIn(claims, 8*time.Hour)
 	jwtauth.SetIssuedNow(claims)
 
-	// generate jwt
 	_, tokenString, err := s.tokenAuth.Encode(claims)
 	if err != nil {
 		http.Error(w, "Failed to generate token: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
+	sameSite := http.SameSiteNoneMode
+	if s.prod {
+		sameSite = http.SameSiteLaxMode // TODO: ensure this works in prod
+	}
+
 	http.SetCookie(w, &http.Cookie{
 		Name:     cookieJWT,
 		Value:    tokenString,
 		Expires:  time.Now().Add(time.Hour * 8), // how long until user must log in again
-		SameSite: http.SameSiteNoneMode,         // TODO: use Lax for prod
+		SameSite: sameSite,
 		HttpOnly: true,
 		Path:     "/",
-		// Domain:   "shortcuts.dxe.io", // TODO: explore this option
+		Secure:   s.prod, // TODO: ensure this works in prod
 	})
-
-	http.Redirect(w, r, "/shortcuts", http.StatusFound) // TODO: use env?
 }
 
 type GoogleAccountInfo struct {

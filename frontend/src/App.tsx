@@ -4,7 +4,7 @@ import 'bulma/css/bulma.min.css';
 import {Button, Navbar, Heading, Section, Box, Level, Form} from 'react-bulma-components';
 
 // TODO: move to env
-const ROOT_PATH = "https://dxe.io"
+const ROOT_PATH = process.env.NODE_ENV === 'development' ? "http://localhost:8080" : "https://dxe.io"
 const API_PATH = ROOT_PATH + "/api"
 const AUTH_PATH = ROOT_PATH + "/auth"
 
@@ -20,7 +20,9 @@ function App() {
         credentials: 'include', // include, *same-origin, omit
       })
       if (resp.status === 401) {
-        window.location.href = AUTH_PATH + "/login"
+        //window.location.href = AUTH_PATH + "/login"
+        // show a link to login instead of automatically redirecting
+        console.log("User is not authorized.")
         return
       }
       const body = await resp.json()
