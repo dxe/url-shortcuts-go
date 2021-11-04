@@ -9,6 +9,7 @@ A URL shortening service written in Go + React.
 3. ```docker compose up --build```
 ### Frontend
 1. ```yarn start```.
+2. Navigate to ```http://localhost:3000/shortcuts```.
 
 ## Deployment
 Changes pushed to main are automatically deployed to prod via GitHub Actions.

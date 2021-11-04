@@ -7,7 +7,7 @@ import { BrowserRouter } from "react-router-dom";
 
 ReactDOM.render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={"/shortcuts"}>
       <App />
     </BrowserRouter>
   </React.StrictMode>,

@@ -194,7 +194,7 @@ func (s *server) homepagePath() string {
 		// In prod, this redirects to the frontend server via the load balancer.
 		redirectPathProd = "/shortcuts"
 		// In development, this redirects to the React dev server.
-		redirectPathLocal = "http://localhost:3000" // TODO: move port to env
+		redirectPathLocal = "http://localhost:3000/shortcuts" // TODO: move port to env
 	)
 	if s.prod {
 		return redirectPathProd

@@ -5,7 +5,6 @@ import {
   Button,
   Navbar,
   Heading,
-  Section,
   Box,
   Level,
   Form,
@@ -150,7 +149,7 @@ const ShortcutsPage = () => {
                   {s.Code}
                 </Heading>
                 <Heading subtitle size={6}>
-                  <a href={s.URL} target={"_blank"}>
+                  <a href={s.URL} target={"_blank"} rel={"noreferrer"}>
                     {s.URL}
                   </a>
                 </Heading>
