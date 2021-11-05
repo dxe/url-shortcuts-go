@@ -100,7 +100,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 		// User does not exist in database.
 		if isDxeEmail(googleAcctInfo.Email) {
 			// User has a DxE email address, so just create an account for them.
-			_, err := model.InsertUser(s.db, model.User{
+			user, err = model.CreateAndReturnUser(s.db, model.User{
 				Name:   googleAcctInfo.Name,
 				Email:  googleAcctInfo.Email,
 				Active: true,
@@ -110,19 +110,11 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, "Failed to create new user.", http.StatusInternalServerError)
 				return
 			}
-			user, err = model.FindUserByEmail(s.db, googleAcctInfo.Email)
-			if err != nil {
-				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
-				return
-			}
-			if newUserExists := user.ID > 0; !newUserExists {
-				http.Error(w, "Failed to find newly created user.", http.StatusInternalServerError)
-				return
-			}
+		} else {
+			// User does not have a DxE email address, so they are unauthorized.
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
+			return
 		}
-		// User does not have a DxE email address, so they are unauthorized.
-		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
-		return
 	}
 
 	err = model.UpdateUserLastLoggedIn(s.db, user)

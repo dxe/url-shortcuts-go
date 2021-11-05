@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -67,6 +68,23 @@ func InsertUser(db *sqlx.DB, user User) (int64, error) {
 	}
 
 	return id, nil
+}
+
+func CreateAndReturnUser(db *sqlx.DB, u User) (User, error) {
+	_, err := InsertUser(db, u)
+	if err != nil {
+		return User{}, err
+	}
+	user, err := FindUserByEmail(db, u.Email)
+	if err != nil {
+		return User{}, err
+	}
+
+	if userExists := user.ID > 0; !userExists {
+		return User{}, errors.New("newly created user does not exist")
+	}
+
+	return user, nil
 }
 
 func UpdateUser(db *sqlx.DB, user User) error {
