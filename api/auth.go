@@ -115,7 +115,7 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
 				return
 			}
-			if newUserExists := user.ID == 0; !newUserExists {
+			if newUserExists := user.ID > 0; !newUserExists {
 				http.Error(w, "Failed to find newly created user.", http.StatusInternalServerError)
 				return
 			}
