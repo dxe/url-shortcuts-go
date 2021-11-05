@@ -1,7 +1,6 @@
 package model
 
 import (
-	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -29,7 +28,7 @@ func FindUserByEmail(db *sqlx.DB, email string) (User, error) {
 		return User{}, fmt.Errorf("failed to select users: %w", err)
 	}
 	if users == nil {
-		return User{}, errors.New("user does not exist")
+		return User{}, nil
 	}
 	return users[0], nil
 }

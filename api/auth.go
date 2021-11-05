@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/dxe/url-shortcuts-go/model"
@@ -91,6 +92,35 @@ func (s *server) handleGoogleCallback(w http.ResponseWriter, r *http.Request) {
 
 	user, err := model.FindUserByEmail(s.db, googleAcctInfo.Email)
 	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if userExists := user.ID > 0; !userExists {
+		// User does not exist in database.
+		if isDxeEmail(googleAcctInfo.Email) {
+			// User has a DxE email address, so just create an account for them.
+			_, err := model.InsertUser(s.db, model.User{
+				Name:   googleAcctInfo.Name,
+				Email:  googleAcctInfo.Email,
+				Active: true,
+				Admin:  false,
+			})
+			if err != nil {
+				http.Error(w, "Failed to create new user.", http.StatusInternalServerError)
+				return
+			}
+			user, err = model.FindUserByEmail(s.db, googleAcctInfo.Email)
+			if err != nil {
+				http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+				return
+			}
+			if newUserExists := user.ID == 0; !newUserExists {
+				http.Error(w, "Failed to find newly created user.", http.StatusInternalServerError)
+				return
+			}
+		}
+		// User does not have a DxE email address, so they are unauthorized.
 		http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
@@ -223,4 +253,10 @@ func nonce() (string, error) {
 		return "", err
 	}
 	return hex.EncodeToString(buf[:]), nil
+}
+
+func isDxeEmail(address string) bool {
+	components := strings.Split(address, "@")
+	_, domain := components[0], components[1]
+	return domain == "directactioneverywhere.com"
 }
