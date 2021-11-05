@@ -16,6 +16,12 @@ type Shortcut struct {
 	UpdatedBy int    `db:"updated_by"`
 }
 
+type ListShortcutOptions struct {
+	Code  string
+	Limit int
+	Page  int
+}
+
 func GetShortcutByCode(db *sqlx.DB, code string) (Shortcut, error) {
 	query := `
 		SELECT id, code, url, created, created_by, updated, updated_by
@@ -34,22 +40,56 @@ func GetShortcutByCode(db *sqlx.DB, code string) (Shortcut, error) {
 	return shortcuts[0], nil
 }
 
-func ListShortcuts(db *sqlx.DB) ([]Shortcut, error) {
-	// TODO: figure out paging, join user info, etc.
+func CountShortcuts(db *sqlx.DB, code string) (int, error) {
+	var total int
+	query := "SELECT count(*) FROM shortcuts"
+	var args []interface{}
+	if code != "" {
+		query += " WHERE code like ?"
+		args = []interface{}{code + "%"}
+	}
+	err := db.QueryRowx(query, args...).Scan(&total)
+	if err != nil {
+		return 0, fmt.Errorf("failed to count total shortcut rows: %w", err)
+	}
+	return total, nil
+}
+
+func ListShortcuts(db *sqlx.DB, opts ListShortcutOptions) ([]Shortcut, int, error) {
+	// TODO: join user name to display in UI?
 	query := `
 		SELECT id, code, url, created, created_by, updated, updated_by
 		FROM shortcuts
 	`
+	var args []interface{}
+
+	if opts.Code != "" {
+		query += " WHERE code like ?"
+		args = append(args, opts.Code+"%")
+	}
+
+	query += " ORDER BY updated DESC"
+
+	if opts.Limit > 0 {
+		query += " LIMIT ?, ?"
+		args = append(args, (opts.Page-1)*opts.Limit)
+		args = append(args, opts.Limit)
+	}
 
 	var shortcuts []Shortcut
-	if err := db.Select(&shortcuts, query); err != nil {
-		return nil, fmt.Errorf("failed to select shortcuts: %w", err)
+	if err := db.Select(&shortcuts, query, args...); err != nil {
+		return nil, 0, fmt.Errorf("failed to select shortcuts: %w", err)
 	}
 	if shortcuts == nil {
-		return nil, nil
+		return make([]Shortcut, 0), 0, nil
 	}
 
-	return shortcuts, nil
+	total, err := CountShortcuts(db, opts.Code)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	return shortcuts, total, nil
 }
 
 func InsertShortcut(db *sqlx.DB, shortcut Shortcut) (int64, error) {

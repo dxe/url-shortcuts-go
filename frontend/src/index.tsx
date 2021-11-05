@@ -5,6 +5,8 @@ import App from "./App";
 import reportWebVitals from "./reportWebVitals";
 import { BrowserRouter } from "react-router-dom";
 
+document.title = "DxE Shortcuts"
+
 ReactDOM.render(
   <React.StrictMode>
     <BrowserRouter basename={"/shortcuts"}>

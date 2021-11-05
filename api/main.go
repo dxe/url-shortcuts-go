@@ -114,7 +114,7 @@ func (s *server) apiRouter(r chi.Router) {
 	r.Route("/shortcuts", func(r chi.Router) {
 		r.Get("/", s.getShortcuts)
 		r.Post("/", s.createShortcut)
-		r.Patch("/{id}", s.updateShortcut)
+		r.Put("/{id}", s.updateShortcut)
 		r.Delete("/{id}", s.deleteShortcut)
 	})
 
@@ -122,7 +122,7 @@ func (s *server) apiRouter(r chi.Router) {
 		r.Use(adminAuthorizer)
 		r.Get("/", s.getUsers)
 		r.Post("/", s.createUser)
-		r.Patch("/{id}", s.updateUser)
+		r.Put("/{id}", s.updateUser)
 		r.Delete("/{id}", s.deleteUser)
 	})
 }
@@ -192,12 +192,12 @@ func writeJSON(w http.ResponseWriter, data interface{}) {
 func (s *server) homepagePath() string {
 	const (
 		// In prod, this redirects to the frontend server via the load balancer.
-		redirectPathProd = "/shortcuts"
+		pathProd = "/shortcuts"
 		// In development, this redirects to the React dev server.
-		redirectPathLocal = "http://localhost:3000/shortcuts" // TODO: move port to env
+		pathLocal = "http://localhost:3000/shortcuts" // TODO: move port to env
 	)
 	if s.prod {
-		return redirectPathProd
+		return pathProd
 	}
-	return redirectPathLocal
+	return pathLocal
 }

@@ -10,13 +10,22 @@ import (
 )
 
 func (s *server) getShortcuts(w http.ResponseWriter, r *http.Request) {
-	shortcuts, err := model.ListShortcuts(s.db)
+	limit, _ := strconv.Atoi(r.URL.Query().Get("limit"))
+	page, _ := strconv.Atoi(r.URL.Query().Get("page"))
+	opts := model.ListShortcutOptions{
+		Code:  r.URL.Query().Get("code"),
+		Limit: limit,
+		Page:  page,
+	}
+
+	shortcuts, total, err := model.ListShortcuts(s.db, opts)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 	writeJSON(w, map[string]interface{}{
-		"shortcuts": shortcuts,
+		"shortcuts":   shortcuts,
+		"total_count": total,
 	})
 }
 
