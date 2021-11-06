@@ -87,3 +87,10 @@ func (s *server) deleteUser(w http.ResponseWriter, r *http.Request) {
 		"id": id,
 	})
 }
+
+func (s *server) getCurrentUser(w http.ResponseWriter, r *http.Request) {
+	user := mustGetUserFromCtx(r.Context())
+	writeJSON(w, map[string]interface{}{
+		"user": user,
+	})
+}

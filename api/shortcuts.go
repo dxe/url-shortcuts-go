@@ -103,3 +103,29 @@ func (s *server) deleteShortcut(w http.ResponseWriter, r *http.Request) {
 		"id": id,
 	})
 }
+
+func (s *server) getTopShortcuts(w http.ResponseWriter, r *http.Request) {
+	day, err := model.GetTopShortcuts(s.db, model.PeriodDay)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	week, err := model.GetTopShortcuts(s.db, model.PeriodWeek)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	month, err := model.GetTopShortcuts(s.db, model.PeriodMonth)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	writeJSON(w, map[string]interface{}{
+		"today":      day,
+		"this_week":  week,
+		"this_month": month,
+	})
+}

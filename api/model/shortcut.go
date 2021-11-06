@@ -1,6 +1,7 @@
 package model
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/jmoiron/sqlx"
@@ -141,4 +142,45 @@ func DeleteShortcut(db *sqlx.DB, shortcut Shortcut) error {
 	}
 
 	return nil
+}
+
+type TopShortcut struct {
+	ID          int    `db:"id"`
+	Code        string `db:"code"`
+	TotalVisits int64  `db:"total_visits"`
+}
+
+const (
+	PeriodDay   = "DAY"
+	PeriodWeek  = "WEEK"
+	PeriodMonth = "MONTH"
+	PeriodYear  = "YEAR"
+)
+
+func GetTopShortcuts(db *sqlx.DB, period string) ([]TopShortcut, error) {
+	var validPeriods = map[string]struct{}{
+		PeriodDay:   struct{}{},
+		PeriodWeek:  struct{}{},
+		PeriodMonth: struct{}{},
+		PeriodYear:  struct{}{},
+	}
+	if _, ok := validPeriods[period]; !ok {
+		return nil, errors.New("invalid period")
+	}
+
+	query := `
+		select shortcut_id as id, code, count(*) as total_visits
+		from visits
+		join shortcuts on shortcuts.id = visits.shortcut_id
+		where date(timestamp) > DATE_SUB(CURRENT_DATE, INTERVAL 1 ` + period + `)
+		group by shortcut_id
+		order by count(*) desc
+		limit 10
+	`
+	shortcuts := make([]TopShortcut, 0)
+	if err := db.Select(&shortcuts, query); err != nil {
+		return shortcuts, fmt.Errorf("failed to select top shortcuts: %w", err)
+	}
+
+	return shortcuts, nil
 }

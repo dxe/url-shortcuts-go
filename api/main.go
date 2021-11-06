@@ -116,6 +116,7 @@ func (s *server) apiRouter(r chi.Router) {
 		r.Post("/", s.createShortcut)
 		r.Put("/{id}", s.updateShortcut)
 		r.Delete("/{id}", s.deleteShortcut)
+		r.Get("/top", s.getTopShortcuts)
 	})
 
 	r.Route("/users", func(r chi.Router) {
@@ -124,6 +125,7 @@ func (s *server) apiRouter(r chi.Router) {
 		r.Post("/", s.createUser)
 		r.Put("/{id}", s.updateUser)
 		r.Delete("/{id}", s.deleteUser)
+		r.Get("/me", s.getCurrentUser)
 	})
 }
 
