@@ -111,6 +111,8 @@ func (s *server) apiRouter(r chi.Router) {
 	r.Use(userCtx)
 	r.Use(userAuthorizer)
 
+	r.Get("/me", s.getCurrentUser)
+
 	r.Route("/shortcuts", func(r chi.Router) {
 		r.Get("/", s.getShortcuts)
 		r.Post("/", s.createShortcut)
@@ -125,7 +127,6 @@ func (s *server) apiRouter(r chi.Router) {
 		r.Post("/", s.createUser)
 		r.Put("/{id}", s.updateUser)
 		r.Delete("/{id}", s.deleteUser)
-		r.Get("/me", s.getCurrentUser)
 	})
 }
 

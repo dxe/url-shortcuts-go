@@ -31,7 +31,7 @@ export default function App() {
 
   const getCurrentUser = async () => {
     try {
-      const resp = await fetch(API_PATH + `/users/me`, {
+      const resp = await fetch(API_PATH + `/me`, {
         // method: 'GET', // *GET, POST, PUT, DELETE, etc.
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
