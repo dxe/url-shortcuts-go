@@ -4,57 +4,62 @@ import { API_PATH } from "../../App";
 import { Button, Form, Heading, Level } from "react-bulma-components";
 import { Shortcut } from "./ShortcutsPage";
 
+const emptyShortcut = {
+  ID: 0,
+  URL: "",
+  Code: "",
+} as Shortcut;
+
 export const EditShortcutPage = () => {
   const location = useLocation();
-  const [id, setID] = useState("");
-  const [code, setCode] = useState("");
-  const [target, setTarget] = useState("");
+  const [shortcut, setShortcut] = useState(emptyShortcut);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (location?.state?.shortcut as Shortcut) {
       // to edit an existing shortcut
-      setID(location.state.shortcut.ID);
-      setCode(location.state.shortcut.Code);
-      setTarget(location.state.shortcut.URL);
+      setShortcut(location.state.shortcut);
     } else {
       // to create a new shortcut
-      setID("");
-      setCode("");
-      setTarget("");
+      setShortcut(emptyShortcut);
     }
   }, [location.state]);
 
-  const save = async () => {
-    setSaving(true);
-
-    // validate input fields
-    if (code.length === 0) {
+  const validateFields = (): boolean => {
+    if (shortcut.Code.length === 0) {
       alert("Short Link must not be blank!");
-      return;
+      return false;
     }
-    if (code.indexOf(" ") !== -1) {
+    if (shortcut.Code.indexOf(" ") !== -1) {
       alert("Short Link must not contain spaces!");
-      return;
+      return false;
     }
     if (
-      target.substr(0, 7) !== "http://" &&
-      target.substr(0, 8) !== "https://"
+      shortcut.URL.substr(0, 7) !== "http://" &&
+      shortcut.URL.substr(0, 8) !== "https://"
     ) {
       alert(`Target URL must begin with "http://" or "https://" prefix.`);
+      return false;
+    }
+    return true;
+  };
+
+  const save = async () => {
+    setSaving(true);
+    if (!validateFields()) {
+      setSaving(false);
       return;
     }
-
     try {
-      const resp = await fetch(API_PATH + `/shortcuts/${id}`, {
+      const resp = await fetch(API_PATH + `/shortcuts/${shortcut.ID || ""}`, {
         headers: {
           "Content-Type": "application/json",
         },
         method: location?.state?.shortcut ? "PUT" : "POST",
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
-        body: JSON.stringify({ code: code, url: target }),
+        body: JSON.stringify(shortcut), // TODO: TEST THIS
       });
       if (resp.status !== 200) {
         const err = await resp.text();
@@ -74,7 +79,7 @@ export const EditShortcutPage = () => {
       <Level>
         <Level.Side>
           <Level.Item>
-            <Heading size={5}>{location?.state?.shortcut ? "Edit" : "New"} Shortcut</Heading>
+            <Heading size={5}>{shortcut.ID ? "Edit" : "New"} Shortcut</Heading>
           </Level.Item>
         </Level.Side>
       </Level>
@@ -93,8 +98,13 @@ export const EditShortcutPage = () => {
               type="text"
               className={"is-large"}
               autoFocus
-              value={code}
-              onChange={(evt) => setCode(evt.target.value.toLowerCase())}
+              value={shortcut.Code}
+              onChange={(evt) =>
+                setShortcut((prev) => ({
+                  ...prev,
+                  Code: evt.target.value.toLowerCase(),
+                }))
+              }
             />
           </Form.Control>
         </Form.Field>
@@ -107,8 +117,10 @@ export const EditShortcutPage = () => {
             <Form.Input
               placeholder="https://"
               type="text"
-              value={target}
-              onChange={(evt) => setTarget(evt.target.value)}
+              value={shortcut.URL}
+              onChange={(evt) =>
+                setShortcut((prev) => ({ ...prev, URL: evt.target.value }))
+              }
               onKeyPress={(e) => {
                 if (e.key === "Enter") save();
               }}

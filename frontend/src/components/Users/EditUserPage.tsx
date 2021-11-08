@@ -4,64 +4,60 @@ import { API_PATH } from "../../App";
 import { Button, Form, Heading, Level } from "react-bulma-components";
 import { User } from "./UsersPage";
 
+const emptyUser = {
+  ID: 0,
+  Name: "",
+  Email: "",
+  Active: true,
+  Admin: false,
+  CreatedAt: "",
+  LastLoggedIn: "",
+} as User;
+
 export const EditUserPage = () => {
   const location = useLocation();
-  const [id, setID] = useState("");
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [active, setActive] = useState(true);
-  const [admin, setAdmin] = useState(false);
-  const [lastLoggedIn, setLastLoggedIn] = useState("");
+  const [user, setUser] = useState(emptyUser);
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (location?.state?.user as User) {
-      // to edit an existing shortcut
-      setID(location.state.user.ID);
-      setName(location.state.user.Name);
-      setEmail(location.state.user.Email);
-      setActive(location.state.user.Active);
-      setAdmin(location.state.user.Admin);
-      setLastLoggedIn(location.state.user.LastLoggedIn);
+      // to edit an existing user
+      setUser(location.state.user);
     } else {
       // to create a new user
-      setID("");
-      setName("");
-      setEmail("");
-      setActive(true);
-      setAdmin(false);
-      setLastLoggedIn("");
+      setUser(emptyUser);
     }
   }, [location.state]);
 
+  const validateFields = (): boolean => {
+    if (user.Name.length === 0) {
+      alert("Name must not be blank!");
+      return false;
+    }
+    if (user.Email.length === 0) {
+      alert("Email must not be blank!");
+      return false;
+    }
+    return true;
+  };
+
   const save = async () => {
     setSaving(true);
-
-    // validate input fields
-    if (name.length === 0) {
-      alert("Name must not be blank!");
-      return;
-    }
-    if (email.length === 0) {
-      alert("Email must not be blank!");
+    if (!validateFields()) {
+      setSaving(false);
       return;
     }
 
     try {
-      const resp = await fetch(API_PATH + `/users/${id}`, {
+      const resp = await fetch(API_PATH + `/users/${user.ID || ""}`, {
         headers: {
           "Content-Type": "application/json",
         },
         method: location?.state?.user ? "PUT" : "POST",
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
-        body: JSON.stringify({
-          name: name,
-          email: email,
-          active: active,
-          admin: admin,
-        }), // TODO: add other fields (see api)
+        body: JSON.stringify(user),
       });
       if (resp.status !== 200) {
         const err = await resp.text();
@@ -81,7 +77,7 @@ export const EditUserPage = () => {
       <Level>
         <Level.Side>
           <Level.Item>
-            <Heading size={5}>{location?.state?.user ? "Edit" : "New"} User</Heading>
+            <Heading size={5}>{user.ID ? "Edit" : "New"} User</Heading>
           </Level.Item>
         </Level.Side>
       </Level>
@@ -93,8 +89,10 @@ export const EditUserPage = () => {
             <Form.Input
               type="text"
               autoFocus
-              value={name}
-              onChange={(evt) => setName(evt.target.value)}
+              value={user.Name}
+              onChange={(evt) =>
+                setUser((prev) => ({ ...prev, Name: evt.target.value }))
+              }
             />
           </Form.Control>
         </Form.Field>
@@ -106,8 +104,10 @@ export const EditUserPage = () => {
           <Form.Control fullwidth>
             <Form.Input
               type="email"
-              value={email}
-              onChange={(evt) => setEmail(evt.target.value)}
+              value={user.Email}
+              onChange={(evt) =>
+                setUser((prev) => ({ ...prev, Email: evt.target.value }))
+              }
               onKeyPress={(e) => {
                 if (e.key === "Enter") save();
               }}
@@ -119,24 +119,36 @@ export const EditUserPage = () => {
       <Form.Field kind={"group"}>
         <Form.Control>
           <Form.Checkbox
-            checked={active}
-            onChange={(evt) => setActive(evt.target.checked)}
+            checked={user.Active}
+            onChange={(evt) =>
+              setUser((prev) => ({ ...prev, Active: evt.target.checked }))
+            }
           />
         </Form.Control>
         <Form.Control>
-          <Form.Label onClick={() => setActive(!active)}>Active</Form.Label>
+          <Form.Label
+            onClick={() =>
+              setUser((prev) => ({ ...prev, Active: !prev.Active }))
+            }
+          >
+            Active
+          </Form.Label>
         </Form.Control>
       </Form.Field>
 
       <Form.Field kind={"group"}>
         <Form.Control>
           <Form.Checkbox
-            checked={admin}
-            onChange={(evt) => setAdmin(evt.target.checked)}
+            checked={user.Admin}
+            onChange={(evt) =>
+              setUser((prev) => ({ ...prev, Admin: evt.target.checked }))
+            }
           />
         </Form.Control>
         <Form.Control>
-          <Form.Label onClick={() => setAdmin(!admin)}>
+          <Form.Label
+            onClick={() => setUser((prev) => ({ ...prev, Admin: !prev.Admin }))}
+          >
             Admin{" "}
             <span style={{ fontWeight: "normal" }}>
               (gives access to manage other users)
@@ -145,9 +157,9 @@ export const EditUserPage = () => {
         </Form.Control>
       </Form.Field>
 
-      {lastLoggedIn && (
+      {user.LastLoggedIn && (
         <>
-          <strong>Last logged in:</strong> {lastLoggedIn}
+          <strong>Last logged in:</strong> {user.LastLoggedIn}
         </>
       )}
 
