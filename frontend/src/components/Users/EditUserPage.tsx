@@ -140,7 +140,7 @@ export const EditUserPage = () => {
           <Form.Label onClick={() => setAdmin(!admin)}>
             Admin{" "}
             <span style={{ fontWeight: "normal" }}>
-              (gives user access to manage other users)
+              (gives access to manage other users)
             </span>
           </Form.Label>
         </Form.Control>
