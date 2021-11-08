@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { API_PATH } from "../../App";
 import { Button, Form, Heading, Level } from "react-bulma-components";
 import { User } from "./UsersPage";
+import { toast } from "react-toastify";
 
 const emptyUser = {
   ID: 0,
@@ -32,11 +33,11 @@ export const EditUserPage = () => {
 
   const validateFields = (): boolean => {
     if (user.Name.length === 0) {
-      alert("Name must not be blank!");
+      toast.error("Name must not be blank!");
       return false;
     }
     if (user.Email.length === 0) {
-      alert("Email must not be blank!");
+      toast.error("Email must not be blank!");
       return false;
     }
     return true;
@@ -64,10 +65,11 @@ export const EditUserPage = () => {
         throw err;
       }
       // success
+      toast.success("User saved!");
       navigate("/users");
     } catch (e) {
       console.error(e);
-      alert("Failed to save user. Maybe they already exist?");
+      toast.error("Failed to save user. Maybe they already exist?");
       setSaving(false);
     }
   };

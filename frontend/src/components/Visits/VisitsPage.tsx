@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { Columns, Heading, Level, Table, Box } from "react-bulma-components";
 import { API_PATH, AUTH_PATH } from "../../App";
 import { Shortcut } from "../Shortcuts/ShortcutsPage";
+import { toast } from "react-toastify";
+import { TopShortcutsTable } from "./TopShortcutsTable";
 
 interface TopShortcuts {
   today: Shortcut[];
@@ -26,7 +28,7 @@ export const VisitsPage = () => {
       const body = await resp.json();
       setTopShortcuts(body);
     } catch (e) {
-      alert("Failed to load users. Please try again.");
+      toast.error("Failed to load top shortcuts. Please try again.");
     }
   };
 
@@ -67,30 +69,6 @@ export const VisitsPage = () => {
           </Box>
         </Columns.Column>
       </Columns>
-    </>
-  );
-};
-
-const TopShortcutsTable = (props: any) => {
-  return (
-    <>
-      <Table>
-        <thead>
-          <tr>
-            <th>Shortcut</th>
-            <th>Visits</th>
-          </tr>
-        </thead>
-        <tbody>
-          {props.shortcuts?.map((s: Shortcut) => (
-            // TODO: add key
-            <tr>
-              <td>{s.Code}</td>
-              <td>{s.TotalVisits}</td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
     </>
   );
 };

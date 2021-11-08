@@ -11,6 +11,7 @@ import {
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash, faPencilAlt } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 
 export interface User {
   ID: number;
@@ -40,7 +41,7 @@ export const UsersPage = () => {
       const body = await resp.json();
       setUsers(body.users);
     } catch (e) {
-      alert("Failed to load users. Please try again.");
+      toast.error("Failed to load users. Please try again.");
     } finally {
       setInitLoading(false);
     }
@@ -69,10 +70,11 @@ export const UsersPage = () => {
           throw err;
         }
         // success
+        toast.success("User deleted!");
         loadUsers();
       } catch (e) {
         console.error(e);
-        alert("Failed to delete user.");
+        toast.error("Failed to delete user.");
       }
     }
   };

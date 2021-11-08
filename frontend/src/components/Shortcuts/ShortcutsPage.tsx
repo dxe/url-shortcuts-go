@@ -16,6 +16,7 @@ import {
   faPencilAlt,
   faSearch,
 } from "@fortawesome/free-solid-svg-icons";
+import { toast } from "react-toastify";
 
 export interface Shortcut {
   ID: number;
@@ -57,7 +58,7 @@ export const ShortcutsPage = () => {
         setPage(1);
       }
     } catch (e) {
-      alert("Failed to load shortcuts. Please try again.");
+      toast.error("Failed to load shortcuts. Please try again.");
     } finally {
       setInitLoading(false);
     }
@@ -86,10 +87,11 @@ export const ShortcutsPage = () => {
           throw err;
         }
         // success
+        toast.success("Shortcut deleted!");
         loadShortcuts();
       } catch (e) {
         console.error(e);
-        alert("Failed to delete shortcut.");
+        toast.error("Failed to delete shortcut.");
       }
     }
   };

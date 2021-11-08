@@ -16,6 +16,8 @@ import {
   faUserPlus,
   faUsers,
 } from "@fortawesome/free-solid-svg-icons";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const ROOT_PATH =
   process.env.NODE_ENV === "development"
@@ -43,7 +45,7 @@ export default function App() {
       const body = await resp.json();
       setLoggedInUser(body.user);
     } catch (e) {
-      alert("Failed to get current user. Please try again.");
+      toast.error("Failed to get current user. Please try again.");
     }
   };
 
@@ -149,6 +151,7 @@ export default function App() {
           </Box>
         </Columns.Column>
       </Columns>
+      <ToastContainer position={"bottom-right"} autoClose={3000} />
     </div>
   );
 }

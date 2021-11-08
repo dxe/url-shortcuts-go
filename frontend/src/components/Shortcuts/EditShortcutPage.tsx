@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { API_PATH } from "../../App";
 import { Button, Form, Heading, Level } from "react-bulma-components";
 import { Shortcut } from "./ShortcutsPage";
+import { toast } from "react-toastify";
 
 const emptyShortcut = {
   ID: 0,
@@ -28,18 +29,18 @@ export const EditShortcutPage = () => {
 
   const validateFields = (): boolean => {
     if (shortcut.Code.length === 0) {
-      alert("Short Link must not be blank!");
+      toast.error("Short Link must not be blank!");
       return false;
     }
     if (shortcut.Code.indexOf(" ") !== -1) {
-      alert("Short Link must not contain spaces!");
+      toast.error("Short Link must not contain spaces!");
       return false;
     }
     if (
       shortcut.URL.substr(0, 7) !== "http://" &&
       shortcut.URL.substr(0, 8) !== "https://"
     ) {
-      alert(`Target URL must begin with "http://" or "https://" prefix.`);
+      toast.error(`Target URL must begin with "http://" or "https://" prefix.`);
       return false;
     }
     return true;
@@ -66,10 +67,11 @@ export const EditShortcutPage = () => {
         throw err;
       }
       // success
+      toast.success("Shortcut saved!");
       navigate("/");
     } catch (e) {
       console.error(e);
-      alert("Failed to save shortcut. Maybe it already exists?");
+      toast.error("Failed to save shortcut. Maybe it already exists?");
       setSaving(false);
     }
   };
