@@ -151,7 +151,7 @@ export default function App() {
           </Box>
         </Columns.Column>
       </Columns>
-      <ToastContainer position={"bottom-right"} autoClose={3000} newestOnTop={true} />
+      <ToastContainer position={"bottom-left"} autoClose={3000} newestOnTop={true} />
     </div>
   );
 }

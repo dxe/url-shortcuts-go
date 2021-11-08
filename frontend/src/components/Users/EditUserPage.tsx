@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { API_PATH } from "../../App";
-import { Button, Form, Heading, Level } from "react-bulma-components";
+import { Button, Form } from "react-bulma-components";
 import { User } from "./UsersPage";
 import { toast } from "react-toastify";
+import {TitleBar} from "../common/TitleBar";
 
 const emptyUser = {
   ID: 0,
@@ -76,13 +77,7 @@ export const EditUserPage = () => {
 
   return (
     <>
-      <Level>
-        <Level.Side>
-          <Level.Item>
-            <Heading size={5}>{user.ID ? "Edit" : "New"} User</Heading>
-          </Level.Item>
-        </Level.Side>
-      </Level>
+      <TitleBar title={(user.ID ? "Edit" : "New") + " User"} />
 
       <Form.Field>
         <Form.Label>Name</Form.Label>

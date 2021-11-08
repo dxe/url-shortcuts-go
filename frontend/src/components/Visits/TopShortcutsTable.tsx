@@ -2,7 +2,11 @@ import { Table } from "react-bulma-components";
 import { Shortcut } from "../Shortcuts/ShortcutsPage";
 import React from "react";
 
-export const TopShortcutsTable = (props: any) => {
+interface TopShortcutsTableProps {
+  shortcuts: Shortcut[]
+}
+
+export const TopShortcutsTable = (props: TopShortcutsTableProps) => {
   return (
     <>
       <Table>
@@ -14,7 +18,6 @@ export const TopShortcutsTable = (props: any) => {
         </thead>
         <tbody>
           {props.shortcuts?.map((s: Shortcut) => (
-            // TODO: add key
             <tr>
               <td>{s.Code}</td>
               <td>{s.TotalVisits}</td>

@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { Columns, Heading, Level, Table, Box } from "react-bulma-components";
+import { Columns, Heading, Box } from "react-bulma-components";
 import { API_PATH, AUTH_PATH } from "../../App";
 import { Shortcut } from "../Shortcuts/ShortcutsPage";
 import { toast } from "react-toastify";
 import { TopShortcutsTable } from "./TopShortcutsTable";
+import {TitleBar} from "../common/TitleBar";
 
 interface TopShortcuts {
   today: Shortcut[];
@@ -41,13 +42,7 @@ export const VisitsPage = () => {
 
   return (
     <>
-      <Level>
-        <Level.Side>
-          <Level.Item>
-            <Heading size={5}>Top Shortcuts</Heading>
-          </Level.Item>
-        </Level.Side>
-      </Level>
+      <TitleBar title={"Top Shortcuts"} />
 
       <Columns>
         <Columns.Column>

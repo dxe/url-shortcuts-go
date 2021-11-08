@@ -1,9 +1,10 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { API_PATH } from "../../App";
-import { Button, Form, Heading, Level } from "react-bulma-components";
+import { Button, Form } from "react-bulma-components";
 import { Shortcut } from "./ShortcutsPage";
 import { toast } from "react-toastify";
+import {TitleBar} from "../common/TitleBar";
 
 const emptyShortcut = {
   ID: 0,
@@ -60,7 +61,7 @@ export const EditShortcutPage = () => {
         method: location?.state?.shortcut ? "PUT" : "POST",
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
-        body: JSON.stringify(shortcut), // TODO: TEST THIS
+        body: JSON.stringify(shortcut),
       });
       if (resp.status !== 200) {
         const err = await resp.text();
@@ -78,13 +79,7 @@ export const EditShortcutPage = () => {
 
   return (
     <>
-      <Level>
-        <Level.Side>
-          <Level.Item>
-            <Heading size={5}>{shortcut.ID ? "Edit" : "New"} Shortcut</Heading>
-          </Level.Item>
-        </Level.Side>
-      </Level>
+      <TitleBar title={(shortcut.ID ? "Edit" : "New") + " Shortcut"} />
 
       <Form.Field>
         <Form.Label>Short Link</Form.Label>
