@@ -4,7 +4,7 @@ import {
   Button,
   Columns,
   Form,
-  Heading,
+  Heading, Icon,
   Level,
   Pagination,
 } from "react-bulma-components";
@@ -14,7 +14,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faTrash,
   faPencilAlt,
-  faSearch,
+  faSearch, faUserPlus, faClipboard, faCopy,
 } from "@fortawesome/free-solid-svg-icons";
 import { toast } from "react-toastify";
 
@@ -152,11 +152,31 @@ export const ShortcutsPage = () => {
                   size={4}
                   style={{ cursor: "pointer" }}
                   onClick={() => {
-                    navigator.clipboard.writeText("https://dxe.io/" + s.Code);
+                    toast.promise(
+                      navigator.clipboard.writeText("https://dxe.io/" + s.Code),
+                      {
+                        pending: 'Copying...',
+                        success: {
+                          render(){
+                            return "Copied shortcut to clipboard."
+                          },
+                          type: "info",
+                        },
+                        error: 'Failed to copy shortcut to clipboard.'
+                      }
+                    )
                   }}
                 >
                   <span style={{ color: "grey" }}>dxe.io/</span>
                   {s.Code}
+                  <Button size={"small"} color={"white"} rounded>
+                    <Icon>
+                    <FontAwesomeIcon
+                      icon={faCopy}
+                      style={{ color: "grey" }}
+                    />
+                    </Icon>
+                  </Button>
                 </Heading>
                 <Heading subtitle size={6}>
                   <a href={s.URL} target={"_blank"} rel={"noreferrer"}>
