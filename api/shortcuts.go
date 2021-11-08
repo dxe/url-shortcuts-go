@@ -2,8 +2,10 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/dxe/url-shortcuts-go/model"
 	"github.com/go-chi/chi/v5"
@@ -63,12 +65,19 @@ func (s *server) updateShortcut(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: validate input data
 	var shortcut model.Shortcut
 	err = json.NewDecoder(r.Body).Decode(&shortcut)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+
+	reservedKeywords := []string{"api", "shortcut", "healthz", "auth"}
+	for _, k := range reservedKeywords {
+		if strings.HasPrefix(shortcut.Code, k) {
+			http.Error(w, fmt.Sprintf("shortcut code beginning with '%v' is not allowed", k), http.StatusBadRequest)
+			return
+		}
 	}
 
 	shortcut.ID = id
