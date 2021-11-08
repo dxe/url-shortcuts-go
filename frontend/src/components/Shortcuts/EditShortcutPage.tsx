@@ -6,7 +6,6 @@ import { Shortcut } from "./ShortcutsPage";
 
 export const EditShortcutPage = () => {
   const location = useLocation();
-  const { shortcut } = location.state;
   const [id, setID] = useState("");
   const [code, setCode] = useState("");
   const [target, setTarget] = useState("");
@@ -14,18 +13,18 @@ export const EditShortcutPage = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (shortcut as Shortcut) {
+    if (location?.state?.shortcut as Shortcut) {
       // to edit an existing shortcut
-      setID(shortcut.ID);
-      setCode(shortcut.Code);
-      setTarget(shortcut.URL);
+      setID(location.state.shortcut.ID);
+      setCode(location.state.shortcut.Code);
+      setTarget(location.state.shortcut.URL);
     } else {
       // to create a new shortcut
       setID("");
       setCode("");
       setTarget("");
     }
-  }, [shortcut]);
+  }, [location.state]);
 
   const save = async () => {
     setSaving(true);
@@ -52,7 +51,7 @@ export const EditShortcutPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        method: shortcut ? "PUT" : "POST",
+        method: location?.state?.shortcut ? "PUT" : "POST",
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
         body: JSON.stringify({ code: code, url: target }),
@@ -75,7 +74,7 @@ export const EditShortcutPage = () => {
       <Level>
         <Level.Side>
           <Level.Item>
-            <Heading size={5}>{shortcut ? "Edit" : "New"} Shortcut</Heading>
+            <Heading size={5}>{location?.state?.shortcut ? "Edit" : "New"} Shortcut</Heading>
           </Level.Item>
         </Level.Side>
       </Level>

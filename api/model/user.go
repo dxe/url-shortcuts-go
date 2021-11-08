@@ -38,6 +38,7 @@ func ListUsers(db *sqlx.DB) ([]User, error) {
 	query := `
 		SELECT id, name, email, created, IFNULL(last_logged_in,"Never") as last_logged_in, active, admin
 		FROM users
+		ORDER by name
 	`
 
 	var users []User

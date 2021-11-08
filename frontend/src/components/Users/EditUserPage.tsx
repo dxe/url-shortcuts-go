@@ -6,7 +6,6 @@ import { User } from "./UsersPage";
 
 export const EditUserPage = () => {
   const location = useLocation();
-  const { user } = location.state;
   const [id, setID] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -17,14 +16,14 @@ export const EditUserPage = () => {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    if (user as User) {
+    if (location?.state?.user as User) {
       // to edit an existing shortcut
-      setID(user.ID);
-      setName(user.Name);
-      setEmail(user.Email);
-      setActive(user.Active);
-      setAdmin(user.Admin);
-      setLastLoggedIn(user.LastLoggedIn);
+      setID(location.state.user.ID);
+      setName(location.state.user.Name);
+      setEmail(location.state.user.Email);
+      setActive(location.state.user.Active);
+      setAdmin(location.state.user.Admin);
+      setLastLoggedIn(location.state.user.LastLoggedIn);
     } else {
       // to create a new user
       setID("");
@@ -34,7 +33,7 @@ export const EditUserPage = () => {
       setAdmin(false);
       setLastLoggedIn("");
     }
-  }, [user]);
+  }, [location.state]);
 
   const save = async () => {
     setSaving(true);
@@ -54,7 +53,7 @@ export const EditUserPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        method: user ? "PUT" : "POST",
+        method: location?.state?.user ? "PUT" : "POST",
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
         body: JSON.stringify({
@@ -82,7 +81,7 @@ export const EditUserPage = () => {
       <Level>
         <Level.Side>
           <Level.Item>
-            <Heading size={5}>{user ? "Edit" : "New"} User</Heading>
+            <Heading size={5}>{location?.state?.user ? "Edit" : "New"} User</Heading>
           </Level.Item>
         </Level.Side>
       </Level>
