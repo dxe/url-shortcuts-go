@@ -8,13 +8,14 @@ import (
 )
 
 type Shortcut struct {
-	ID        int    `db:"id"`
-	Code      string `db:"code"`
-	URL       string `db:"url"`
-	CreatedAt string `db:"created"`
-	CreatedBy int    `db:"created_by"` // TODO: consider joining user table to get user name
-	UpdatedAt string `db:"updated"`
-	UpdatedBy int    `db:"updated_by"`
+	ID            int    `db:"id"`
+	Code          string `db:"code"`
+	URL           string `db:"url"`
+	CreatedAt     string `db:"created"`
+	CreatedBy     int    `db:"created_by"` // TODO: consider joining user table to get user name
+	UpdatedAt     string `db:"updated"`
+	UpdatedBy     int    `db:"updated_by"`
+	UpdatedByName string `db:"updated_by_name"`
 }
 
 type ListShortcutOptions struct {
@@ -59,8 +60,9 @@ func CountShortcuts(db *sqlx.DB, code string) (int, error) {
 func ListShortcuts(db *sqlx.DB, opts ListShortcutOptions) ([]Shortcut, int, error) {
 	// TODO: join user name to display in UI?
 	query := `
-		SELECT id, code, url, created, created_by, updated, updated_by
-		FROM shortcuts
+		SELECT s.id, code, url, s.created, created_by, updated, updated_by, u.name as updated_by_name
+		FROM shortcuts s
+		JOIN users u on u.id = s.updated_by
 	`
 	var args []interface{}
 

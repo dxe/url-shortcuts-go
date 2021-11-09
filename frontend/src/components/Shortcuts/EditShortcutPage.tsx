@@ -125,6 +125,12 @@ export const EditShortcutPage = () => {
         </Form.Field>
       </Form.Field>
 
+      {shortcut.UpdatedAt && (
+      <>
+        Last Updated at {shortcut.UpdatedAt} by {shortcut.UpdatedByName}.
+      </>
+      )}
+
       <Form.Field kind="group" className={"pt-4"}>
         <Form.Control>
           <Button color="link" onClick={save} disabled={saving}>
