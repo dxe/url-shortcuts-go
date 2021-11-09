@@ -6,11 +6,11 @@ import { Shortcut } from "./ShortcutsPage";
 import { toast } from "react-toastify";
 import {TitleBar} from "../common/TitleBar";
 
-const emptyShortcut = {
+export const emptyShortcut: Shortcut = {
   ID: 0,
   URL: "",
   Code: "",
-} as Shortcut;
+};
 
 export const EditShortcutPage = () => {
   const location = useLocation();
@@ -20,45 +20,43 @@ export const EditShortcutPage = () => {
 
   useEffect(() => {
     if (location?.state?.shortcut as Shortcut) {
-      // to edit an existing shortcut
       setShortcut(location.state.shortcut);
-    } else {
-      // to create a new shortcut
-      setShortcut(emptyShortcut);
     }
   }, [location.state]);
 
-  const validateFields = (): boolean => {
+  const validateForm = (): boolean => {
     if (shortcut.Code.length === 0) {
-      toast.error("Short Link must not be blank!");
-      return false;
+      toast.error("Short link code must not be blank.")
+      return false
     }
     if (shortcut.Code.indexOf(" ") !== -1) {
-      toast.error("Short Link must not contain spaces!");
-      return false;
+      toast.error("Short link code must not contain spaces.")
+      return false
     }
     if (
       shortcut.URL.substr(0, 7) !== "http://" &&
       shortcut.URL.substr(0, 8) !== "https://"
     ) {
-      toast.error(`Target URL must begin with "http://" or "https://" prefix.`);
-      return false;
+      toast.error("Target URL must begin with 'http://' or 'https://' prefix.")
+      return false
     }
-    return true;
-  };
+    return true
+  }
 
   const save = async () => {
     setSaving(true);
-    if (!validateFields()) {
+
+    if (!validateForm()) {
       setSaving(false);
-      return;
+      return
     }
+
     try {
       const resp = await fetch(API_PATH + `/shortcuts/${shortcut.ID || ""}`, {
         headers: {
           "Content-Type": "application/json",
         },
-        method: location?.state?.shortcut ? "PUT" : "POST",
+        method: shortcut.ID ? "PUT" : "POST",
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
         body: JSON.stringify(shortcut),
@@ -116,7 +114,8 @@ export const EditShortcutPage = () => {
               type="text"
               value={shortcut.URL}
               onChange={(evt) =>
-                setShortcut((prev) => ({ ...prev, URL: evt.target.value }))
+                setShortcut((prev) => ({...prev, URL: evt.target.value}))
+
               }
               onKeyPress={(e) => {
                 if (e.key === "Enter") save();

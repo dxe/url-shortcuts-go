@@ -36,8 +36,6 @@ export const VisitsPage = () => {
   useEffect(() => {
     // load shortcuts from api
     loadTopShortcuts();
-    // TODO: look into this more to see if it's a problem
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

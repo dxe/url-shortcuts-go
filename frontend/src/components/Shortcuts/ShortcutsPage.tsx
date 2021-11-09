@@ -12,11 +12,11 @@ export interface Shortcut {
   ID: number;
   Code: string;
   URL: string;
-  CreatedAt: string;
-  CreatedBy: number;
-  UpdatedAt: string;
-  UpdatedBy: number;
-  TotalVisits: number; // only used for reporting, not always populated
+  CreatedAt?: string;
+  CreatedBy?: number;
+  UpdatedAt?: string;
+  UpdatedBy?: number;
+  TotalVisits?: number; // only used for reporting, not always populated
 }
 
 export const ShortcutsPage = () => {

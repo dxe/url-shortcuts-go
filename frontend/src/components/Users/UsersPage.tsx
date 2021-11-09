@@ -44,8 +44,6 @@ export const UsersPage = () => {
   useEffect(() => {
     // load shortcuts from api
     loadUsers();
-    // TODO: look into this more to see if it's a problem
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (

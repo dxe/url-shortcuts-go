@@ -6,7 +6,7 @@ import { User } from "./UsersPage";
 import { toast } from "react-toastify";
 import {TitleBar} from "../common/TitleBar";
 
-const emptyUser = {
+export const emptyUser: User = {
   ID: 0,
   Name: "",
   Email: "",
@@ -14,7 +14,7 @@ const emptyUser = {
   Admin: false,
   CreatedAt: "",
   LastLoggedIn: "",
-} as User;
+};
 
 export const EditUserPage = () => {
   const location = useLocation();
@@ -24,11 +24,7 @@ export const EditUserPage = () => {
 
   useEffect(() => {
     if (location?.state?.user as User) {
-      // to edit an existing user
       setUser(location.state.user);
-    } else {
-      // to create a new user
-      setUser(emptyUser);
     }
   }, [location.state]);
 
@@ -56,7 +52,7 @@ export const EditUserPage = () => {
         headers: {
           "Content-Type": "application/json",
         },
-        method: location?.state?.user ? "PUT" : "POST",
+        method: user.ID ? "PUT" : "POST",
         mode: "cors", // no-cors, *cors, same-origin
         credentials: "include", // include, *same-origin, omit
         body: JSON.stringify(user),
