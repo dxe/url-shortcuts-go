@@ -1,19 +1,18 @@
-import {Box, Button, Columns, Heading, Tag} from "react-bulma-components";
-import {Link} from "react-router-dom";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
+import { Box, Button, Columns, Heading, Tag } from "react-bulma-components";
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPencilAlt, faTrash } from "@fortawesome/free-solid-svg-icons";
 import React from "react";
-import {User} from "./UsersPage";
-import {API_PATH} from "../../App";
-import {toast} from "react-toastify";
+import { User } from "./UsersPage";
+import { API_PATH } from "../../App";
+import { toast } from "react-toastify";
 
 interface UserItemProps {
-  user: User
+  user: User;
   onDelete: () => void;
 }
 
 export const UserItem = (props: UserItemProps) => {
-
   const deleteUser = async (u: User) => {
     const ok = window.confirm(
       `Are you sure you want to delete the user: ${u.Name}?`
@@ -40,7 +39,6 @@ export const UserItem = (props: UserItemProps) => {
   };
 
   return (
-
     <Box
       style={{ marginBottom: 10, border: 3, borderSpacing: "solid" }}
       key={props.user.ID}
@@ -86,6 +84,5 @@ export const UserItem = (props: UserItemProps) => {
         </Columns.Column>
       </Columns>
     </Box>
-
-  )
-}
+  );
+};

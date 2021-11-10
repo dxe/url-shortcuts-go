@@ -1,19 +1,22 @@
-import {Box, Button, Columns, Heading, Icon} from "react-bulma-components";
-import {toast} from "react-toastify";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faCopy, faPencilAlt, faTrash} from "@fortawesome/free-solid-svg-icons";
-import {Link} from "react-router-dom";
+import { Box, Button, Columns, Heading, Icon } from "react-bulma-components";
+import { toast } from "react-toastify";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faCopy,
+  faPencilAlt,
+  faTrash,
+} from "@fortawesome/free-solid-svg-icons";
+import { Link } from "react-router-dom";
 import React from "react";
-import {Shortcut} from "./ShortcutsPage";
-import {API_PATH} from "../../App";
+import { Shortcut } from "./ShortcutsPage";
+import { API_PATH } from "../../App";
 
 interface ShortcutItemProps {
-  shortcut: Shortcut
+  shortcut: Shortcut;
   onDelete: () => void;
 }
 
 export const ShortcutItem = (props: ShortcutItemProps) => {
-
   const deleteShortcut = async (shortcut: Shortcut) => {
     const ok = window.confirm(
       `Are you sure you want to delete the shortcut: ${props.shortcut.Code}?`
@@ -51,28 +54,27 @@ export const ShortcutItem = (props: ShortcutItemProps) => {
             style={{ cursor: "pointer" }}
             onClick={() => {
               toast.promise(
-                navigator.clipboard.writeText("https://dxe.io/" + props.shortcut.Code),
+                navigator.clipboard.writeText(
+                  "https://dxe.io/" + props.shortcut.Code
+                ),
                 {
-                  pending: 'Copying...',
+                  pending: "Copying...",
                   success: {
-                    render(){
-                      return "Copied shortcut to clipboard."
+                    render() {
+                      return "Copied shortcut to clipboard.";
                     },
                     type: "info",
                   },
-                  error: 'Failed to copy shortcut to clipboard.'
+                  error: "Failed to copy shortcut to clipboard.",
                 }
-              )
+              );
             }}
           >
             <span style={{ color: "grey" }}>dxe.io/</span>
             {props.shortcut.Code}
             <Button size={"small"} color={"white"} rounded>
               <Icon>
-                <FontAwesomeIcon
-                  icon={faCopy}
-                  style={{ color: "grey" }}
-                />
+                <FontAwesomeIcon icon={faCopy} style={{ color: "grey" }} />
               </Icon>
             </Button>
           </Heading>
@@ -106,5 +108,5 @@ export const ShortcutItem = (props: ShortcutItemProps) => {
         </Columns.Column>
       </Columns>
     </Box>
-  )
-}
+  );
+};

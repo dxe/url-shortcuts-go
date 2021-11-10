@@ -1,11 +1,11 @@
-import {Button, Form, Heading, Level} from "react-bulma-components";
-import React, {useState} from "react";
-import {FontAwesomeIcon} from "@fortawesome/react-fontawesome";
-import {faSearch} from "@fortawesome/free-solid-svg-icons";
+import { Button, Form, Heading, Level } from "react-bulma-components";
+import React, { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faSearch } from "@fortawesome/free-solid-svg-icons";
 
 interface TitleBarProps {
-  title: string
-  onSearchSubmit?: (value: string) => void
+  title: string;
+  onSearchSubmit?: (value: string) => void;
 }
 
 export const TitleBar = (props: TitleBarProps) => {
@@ -20,7 +20,6 @@ export const TitleBar = (props: TitleBarProps) => {
       </Level.Side>
 
       {props.onSearchSubmit && (
-
         <Level.Side align="right">
           <Level.Item>
             <Form.Field kind="addons">
@@ -31,7 +30,9 @@ export const TitleBar = (props: TitleBarProps) => {
                   value={searchValue}
                   onChange={(evt) => setSearchValue(evt.target.value)}
                   onKeyPress={(e) => {
-                    if (e.key === "Enter") if (props.onSearchSubmit) props.onSearchSubmit(searchValue);
+                    if (e.key === "Enter")
+                      if (props.onSearchSubmit)
+                        props.onSearchSubmit(searchValue);
                   }}
                 />
               </Form.Control>
@@ -48,10 +49,7 @@ export const TitleBar = (props: TitleBarProps) => {
             </Form.Field>
           </Level.Item>
         </Level.Side>
-
       )}
-
-
     </Level>
-  )
-}
+  );
+};

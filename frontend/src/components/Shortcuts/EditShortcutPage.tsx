@@ -4,17 +4,11 @@ import { API_PATH } from "../../App";
 import { Button, Form } from "react-bulma-components";
 import { Shortcut } from "./ShortcutsPage";
 import { toast } from "react-toastify";
-import {TitleBar} from "../common/TitleBar";
-
-export const emptyShortcut: Shortcut = {
-  ID: 0,
-  URL: "",
-  Code: "",
-};
+import { TitleBar } from "../common/TitleBar";
 
 export const EditShortcutPage = () => {
   const location = useLocation();
-  const [shortcut, setShortcut] = useState(emptyShortcut);
+  const [shortcut, setShortcut] = useState(new Shortcut());
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 
@@ -26,29 +20,29 @@ export const EditShortcutPage = () => {
 
   const validateForm = (): boolean => {
     if (shortcut.Code.length === 0) {
-      toast.error("Short link code must not be blank.")
-      return false
+      toast.error("Short link code must not be blank.");
+      return false;
     }
     if (shortcut.Code.indexOf(" ") !== -1) {
-      toast.error("Short link code must not contain spaces.")
-      return false
+      toast.error("Short link code must not contain spaces.");
+      return false;
     }
     if (
       shortcut.URL.substr(0, 7) !== "http://" &&
       shortcut.URL.substr(0, 8) !== "https://"
     ) {
-      toast.error("Target URL must begin with 'http://' or 'https://' prefix.")
-      return false
+      toast.error("Target URL must begin with 'http://' or 'https://' prefix.");
+      return false;
     }
-    return true
-  }
+    return true;
+  };
 
   const save = async () => {
     setSaving(true);
 
     if (!validateForm()) {
       setSaving(false);
-      return
+      return;
     }
 
     try {
@@ -114,8 +108,7 @@ export const EditShortcutPage = () => {
               type="text"
               value={shortcut.URL}
               onChange={(evt) =>
-                setShortcut((prev) => ({...prev, URL: evt.target.value}))
-
+                setShortcut((prev) => ({ ...prev, URL: evt.target.value }))
               }
               onKeyPress={(e) => {
                 if (e.key === "Enter") save();
@@ -126,9 +119,9 @@ export const EditShortcutPage = () => {
       </Form.Field>
 
       {shortcut.UpdatedAt && (
-      <>
-        Last Updated at {shortcut.UpdatedAt} by {shortcut.UpdatedByName}.
-      </>
+        <>
+          Last Updated at {shortcut.UpdatedAt} by {shortcut.UpdatedByName}.
+        </>
       )}
 
       <Form.Field kind="group" className={"pt-4"}>

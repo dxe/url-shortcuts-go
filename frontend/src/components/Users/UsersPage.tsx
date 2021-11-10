@@ -1,20 +1,26 @@
 import React, { useEffect, useState } from "react";
 import { API_PATH, AUTH_PATH } from "../../App";
-import {
-  Box,
-} from "react-bulma-components";
+import { Box } from "react-bulma-components";
 import { toast } from "react-toastify";
-import {TitleBar} from "../common/TitleBar";
-import {UserItem} from "./UserItem";
+import { TitleBar } from "../common/TitleBar";
+import { UserItem } from "./UserItem";
 
-export interface User {
+export class User {
   ID: number;
   Name: string;
   Email: string;
   Active: boolean;
   Admin: boolean;
-  CreatedAt: string;
-  LastLoggedIn: string;
+  CreatedAt?: string;
+  LastLoggedIn?: string;
+
+  constructor() {
+    this.ID = 0;
+    this.Name = "";
+    this.Email = "";
+    this.Active = true;
+    this.Admin = false;
+  }
 }
 
 export const UsersPage = () => {
@@ -55,9 +61,7 @@ export const UsersPage = () => {
       )}
 
       {users &&
-        users.map((u: User) => (
-          <UserItem user={u} onDelete={loadUsers} />
-        ))}
+        users.map((u: User) => <UserItem user={u} onDelete={loadUsers} />)}
     </>
   );
 };

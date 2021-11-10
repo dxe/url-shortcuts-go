@@ -1,14 +1,11 @@
 import React, { useEffect, useState } from "react";
-import {
-  Box,
-  Pagination,
-} from "react-bulma-components";
+import { Box, Pagination } from "react-bulma-components";
 import { API_PATH, AUTH_PATH } from "../../App";
 import { toast } from "react-toastify";
-import {ShortcutItem} from "./ShortcutItem";
-import {TitleBar} from "../common/TitleBar";
+import { ShortcutItem } from "./ShortcutItem";
+import { TitleBar } from "../common/TitleBar";
 
-export interface Shortcut {
+export class Shortcut {
   ID: number;
   Code: string;
   URL: string;
@@ -18,6 +15,12 @@ export interface Shortcut {
   UpdatedBy?: number;
   UpdatedByName?: string;
   TotalVisits?: number; // only used for reporting, not always populated
+
+  constructor() {
+    this.ID = 0;
+    this.Code = "";
+    this.URL = "";
+  }
 }
 
 export const ShortcutsPage = () => {
@@ -60,7 +63,7 @@ export const ShortcutsPage = () => {
 
   useEffect(() => {
     // Changing the page # will automatically trigger a reload w/ the new search value.
-    page === 1 ? loadShortcuts() : setPage(1)
+    page === 1 ? loadShortcuts() : setPage(1);
     // TODO: look into this more to see if it's a problem
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchCode]);

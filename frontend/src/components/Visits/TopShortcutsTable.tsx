@@ -3,7 +3,7 @@ import { Shortcut } from "../Shortcuts/ShortcutsPage";
 import React from "react";
 
 interface TopShortcutsTableProps {
-  shortcuts: Shortcut[]
+  shortcuts: Shortcut[];
 }
 
 export const TopShortcutsTable = (props: TopShortcutsTableProps) => {

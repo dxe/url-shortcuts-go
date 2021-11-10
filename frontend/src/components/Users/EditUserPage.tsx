@@ -4,21 +4,11 @@ import { API_PATH } from "../../App";
 import { Button, Form } from "react-bulma-components";
 import { User } from "./UsersPage";
 import { toast } from "react-toastify";
-import {TitleBar} from "../common/TitleBar";
-
-export const emptyUser: User = {
-  ID: 0,
-  Name: "",
-  Email: "",
-  Active: true,
-  Admin: false,
-  CreatedAt: "",
-  LastLoggedIn: "",
-};
+import { TitleBar } from "../common/TitleBar";
 
 export const EditUserPage = () => {
   const location = useLocation();
-  const [user, setUser] = useState(emptyUser);
+  const [user, setUser] = useState(new User());
   const navigate = useNavigate();
   const [saving, setSaving] = useState(false);
 

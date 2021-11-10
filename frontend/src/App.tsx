@@ -3,11 +3,11 @@ import "./App.css";
 import "bulma/css/bulma.min.css";
 import { Navbar, Box, Menu, Columns } from "react-bulma-components";
 import { Routes, Route, Link, useLocation } from "react-router-dom";
-import { ShortcutsPage } from "./components/Shortcuts/ShortcutsPage";
-import {EditShortcutPage, emptyShortcut} from "./components/Shortcuts/EditShortcutPage";
+import { Shortcut, ShortcutsPage } from "./components/Shortcuts/ShortcutsPage";
+import { EditShortcutPage } from "./components/Shortcuts/EditShortcutPage";
 import { VisitsPage } from "./components/Visits/VisitsPage";
 import { User, UsersPage } from "./components/Users/UsersPage";
-import {EditUserPage, emptyUser} from "./components/Users/EditUserPage";
+import { EditUserPage } from "./components/Users/EditUserPage";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faMedal,
@@ -79,7 +79,7 @@ export default function App() {
           <Box>
             <Menu>
               <Menu.List title="Shortcuts">
-                <Link to={"/new"} state={{ shortcut: emptyShortcut }}>
+                <Link to={"/new"} state={{ shortcut: new Shortcut() }}>
                   <Menu.List.Item active={currentRoute.pathname === "/new"}>
                     <FontAwesomeIcon
                       icon={faPlus}
@@ -110,7 +110,7 @@ export default function App() {
 
               {loggedInUser?.Admin && (
                 <Menu.List title="Administration">
-                  <Link to={"/new_user"} state={{ user: emptyUser }}>
+                  <Link to={"/new_user"} state={{ user: new User() }}>
                     <Menu.List.Item
                       active={currentRoute.pathname === "/new_user"}
                     >
@@ -149,7 +149,11 @@ export default function App() {
           </Box>
         </Columns.Column>
       </Columns>
-      <ToastContainer position={"bottom-left"} autoClose={3000} newestOnTop={true} />
+      <ToastContainer
+        position={"bottom-left"}
+        autoClose={3000}
+        newestOnTop={true}
+      />
     </div>
   );
 }
