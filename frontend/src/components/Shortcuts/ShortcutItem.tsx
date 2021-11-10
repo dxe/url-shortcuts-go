@@ -10,6 +10,7 @@ import { Link } from "react-router-dom";
 import React from "react";
 import { Shortcut } from "./ShortcutsPage";
 import { API_PATH } from "../../App";
+import axios from "axios";
 
 interface ShortcutItemProps {
   shortcut: Shortcut;
@@ -17,27 +18,20 @@ interface ShortcutItemProps {
 }
 
 export const ShortcutItem = (props: ShortcutItemProps) => {
-  const deleteShortcut = async (shortcut: Shortcut) => {
+  const deleteShortcut = async () => {
     const ok = window.confirm(
       `Are you sure you want to delete the shortcut: ${props.shortcut.Code}?`
     );
     if (ok) {
       try {
-        const resp = await fetch(API_PATH + `/shortcuts/${props.shortcut.ID}`, {
-          method: "DELETE",
-          mode: "cors", // no-cors, *cors, same-origin
-          credentials: "include", // include, *same-origin, omit
+        await axios.delete(API_PATH + `/shortcuts/${props.shortcut.ID}`, {
+          withCredentials: true,
         });
-        if (resp.status !== 200) {
-          const err = await resp.text();
-          throw err;
-        }
-        // success
         toast.success("Shortcut deleted!");
         props.onDelete();
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
-        toast.error("Failed to delete shortcut.");
+        toast.error("Failed to delete shortcut: " + e.response.data);
       }
     }
   };
@@ -61,7 +55,7 @@ export const ShortcutItem = (props: ShortcutItemProps) => {
                   pending: "Copying...",
                   success: {
                     render() {
-                      return "Copied shortcut to clipboard.";
+                      return "Shortcut copied to clipboard.";
                     },
                     type: "info",
                   },
@@ -101,7 +95,7 @@ export const ShortcutItem = (props: ShortcutItemProps) => {
             style={{ flex: 1, marginLeft: 5 }}
             color={"danger"}
             className={"mb-1 is-fullwidth"}
-            onClick={() => deleteShortcut(props.shortcut)}
+            onClick={deleteShortcut}
           >
             <FontAwesomeIcon icon={faTrash} />
           </Button>

@@ -6,6 +6,7 @@ import React from "react";
 import { User } from "./UsersPage";
 import { API_PATH } from "../../App";
 import { toast } from "react-toastify";
+import axios from "axios";
 
 interface UserItemProps {
   user: User;
@@ -13,27 +14,20 @@ interface UserItemProps {
 }
 
 export const UserItem = (props: UserItemProps) => {
-  const deleteUser = async (u: User) => {
+  const deleteUser = async () => {
     const ok = window.confirm(
-      `Are you sure you want to delete the user: ${u.Name}?`
+      `Are you sure you want to delete the user: ${props.user.Name}?`
     );
     if (ok) {
       try {
-        const resp = await fetch(API_PATH + `/users/${u.ID}`, {
-          method: "DELETE",
-          mode: "cors", // no-cors, *cors, same-origin
-          credentials: "include", // include, *same-origin, omit
+        await axios.delete(API_PATH + `/users/${props.user.ID}`, {
+          withCredentials: true,
         });
-        if (resp.status !== 200) {
-          const err = await resp.text();
-          throw err;
-        }
-        // success
         toast.success("User deleted!");
         props.onDelete();
-      } catch (e) {
+      } catch (e: any) {
         console.error(e);
-        toast.error("Failed to delete user.");
+        toast.error("Failed to delete user: " + e.response.data);
       }
     }
   };
@@ -77,7 +71,7 @@ export const UserItem = (props: UserItemProps) => {
             style={{ flex: 1, marginLeft: 5 }}
             color={"danger"}
             className={"mb-1 is-fullwidth"}
-            onClick={() => deleteUser(props.user)}
+            onClick={deleteUser}
           >
             <FontAwesomeIcon icon={faTrash} />
           </Button>

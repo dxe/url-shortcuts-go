@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import "bulma/css/bulma.min.css";
 import { Navbar, Box, Menu, Columns } from "react-bulma-components";
-import { Routes, Route, Link, useLocation } from "react-router-dom";
+import { Routes, Route, Link, useLocation, NavLink } from "react-router-dom";
 import { Shortcut, ShortcutsPage } from "./components/Shortcuts/ShortcutsPage";
 import { EditShortcutPage } from "./components/Shortcuts/EditShortcutPage";
 import { VisitsPage } from "./components/Visits/VisitsPage";
@@ -18,6 +18,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import axios from "axios";
 
 const ROOT_PATH =
   process.env.NODE_ENV === "development"
@@ -33,19 +34,13 @@ export default function App() {
 
   const getCurrentUser = async () => {
     try {
-      const resp = await fetch(API_PATH + `/me`, {
-        // method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        mode: "cors", // no-cors, *cors, same-origin
-        credentials: "include", // include, *same-origin, omit
-      });
-      if (resp.status === 401) {
+      const resp = await axios.get(API_PATH + `/me`, { withCredentials: true });
+      setLoggedInUser(resp.data.user);
+    } catch (e: any) {
+      if (e.response.status === 401) {
         window.location.href = AUTH_PATH + "/login";
-        return;
       }
-      const body = await resp.json();
-      setLoggedInUser(body.user);
-    } catch (e) {
-      toast.error("Failed to get current user. Please try again.");
+      toast.error("Failed to get logged in user: " + e.response.data);
     }
   };
 
@@ -79,57 +74,64 @@ export default function App() {
           <Box>
             <Menu>
               <Menu.List title="Shortcuts">
-                <Link to={"/new"} state={{ shortcut: new Shortcut() }}>
-                  <Menu.List.Item active={currentRoute.pathname === "/new"}>
-                    <FontAwesomeIcon
-                      icon={faPlus}
-                      style={{ marginRight: 10 }}
-                    />
-                    New Shortcut
-                  </Menu.List.Item>
+                <Link
+                  to={"/new"}
+                  state={{ shortcut: new Shortcut() }}
+                  className={
+                    currentRoute.pathname === "/new" ? "is-active" : ""
+                  }
+                >
+                  <FontAwesomeIcon icon={faPlus} style={{ marginRight: 10 }} />
+                  New Shortcut
                 </Link>
-                <Link to={"/"}>
-                  <Menu.List.Item active={currentRoute.pathname === "/"}>
-                    <FontAwesomeIcon
-                      icon={faToolbox}
-                      style={{ marginRight: 10 }}
-                    />
-                    Manage Shortcuts
-                  </Menu.List.Item>
+                <Link
+                  to={"/"}
+                  className={currentRoute.pathname === "/" ? "is-active" : ""}
+                >
+                  <FontAwesomeIcon
+                    icon={faToolbox}
+                    style={{ marginRight: 10 }}
+                  />
+                  Manage Shortcuts
                 </Link>
-                <Link to={"/visits"}>
-                  <Menu.List.Item active={currentRoute.pathname === "/visits"}>
-                    <FontAwesomeIcon
-                      icon={faMedal}
-                      style={{ marginRight: 10 }}
-                    />
-                    View Top Shortcuts
-                  </Menu.List.Item>
+                <Link
+                  to={"/visits"}
+                  className={
+                    currentRoute.pathname === "/visits" ? "is-active" : ""
+                  }
+                >
+                  <FontAwesomeIcon icon={faMedal} style={{ marginRight: 10 }} />
+                  View Top Shortcuts
                 </Link>
               </Menu.List>
 
               {loggedInUser?.Admin && (
                 <Menu.List title="Administration">
-                  <Link to={"/new_user"} state={{ user: new User() }}>
-                    <Menu.List.Item
-                      active={currentRoute.pathname === "/new_user"}
-                    >
-                      <FontAwesomeIcon
-                        icon={faUserPlus}
-                        style={{ marginRight: 10 }}
-                      />
-                      New User
-                    </Menu.List.Item>
+                  <Link
+                    to={"/new_user"}
+                    state={{ user: new User() }}
+                    className={
+                      currentRoute.pathname === "/new_user" ? "is-active" : ""
+                    }
+                  >
+                    <FontAwesomeIcon
+                      icon={faUserPlus}
+                      style={{ marginRight: 10 }}
+                    />
+                    New User
                   </Link>
-                  <Link to={"/users"}>
-                    <Menu.List.Item active={currentRoute.pathname === "/users"}>
-                      <FontAwesomeIcon
-                        icon={faUsers}
-                        style={{ marginRight: 10 }}
-                      />
-                      Manage Users
-                    </Menu.List.Item>
-                  </Link>
+                  <NavLink
+                    to={"/users"}
+                    className={
+                      currentRoute.pathname === "/users" ? "is-active" : ""
+                    }
+                  >
+                    <FontAwesomeIcon
+                      icon={faUsers}
+                      style={{ marginRight: 10 }}
+                    />
+                    Manage Users
+                  </NavLink>
                 </Menu.List>
               )}
             </Menu>

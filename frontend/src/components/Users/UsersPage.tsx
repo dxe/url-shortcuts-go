@@ -4,6 +4,7 @@ import { Box } from "react-bulma-components";
 import { toast } from "react-toastify";
 import { TitleBar } from "../common/TitleBar";
 import { UserItem } from "./UserItem";
+import axios from "axios";
 
 export class User {
   ID: number;
@@ -29,19 +30,19 @@ export const UsersPage = () => {
 
   const loadUsers = async () => {
     try {
-      const resp = await fetch(API_PATH + `/users`, {
-        // method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        mode: "cors", // no-cors, *cors, same-origin
-        credentials: "include", // include, *same-origin, omit
+      const resp = await axios.get(API_PATH + `/users`, {
+        withCredentials: true,
       });
       if (resp.status === 401) {
         window.location.href = AUTH_PATH + "/login";
         return;
       }
-      const body = await resp.json();
-      setUsers(body.users);
-    } catch (e) {
-      toast.error("Failed to load users. Please try again.");
+      setUsers(resp.data.users);
+    } catch (e: any) {
+      if (e.response.status === 401) {
+        window.location.href = AUTH_PATH + "/login";
+      }
+      toast.error("Failed to load users: " + e.response.data);
     } finally {
       setInitLoading(false);
     }
@@ -61,7 +62,9 @@ export const UsersPage = () => {
       )}
 
       {users &&
-        users.map((u: User) => <UserItem user={u} onDelete={loadUsers} />)}
+        users.map((u: User) => (
+          <UserItem user={u} onDelete={loadUsers} key={u.ID} />
+        ))}
     </>
   );
 };

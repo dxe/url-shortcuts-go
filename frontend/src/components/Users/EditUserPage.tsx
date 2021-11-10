@@ -5,6 +5,7 @@ import { Button, Form } from "react-bulma-components";
 import { User } from "./UsersPage";
 import { toast } from "react-toastify";
 import { TitleBar } from "../common/TitleBar";
+import axios from "axios";
 
 export const EditUserPage = () => {
   const location = useLocation();
@@ -38,25 +39,16 @@ export const EditUserPage = () => {
     }
 
     try {
-      const resp = await fetch(API_PATH + `/users/${user.ID || ""}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+      await axios(API_PATH + `/users/${user.ID || ""}`, {
+        withCredentials: true,
         method: user.ID ? "PUT" : "POST",
-        mode: "cors", // no-cors, *cors, same-origin
-        credentials: "include", // include, *same-origin, omit
-        body: JSON.stringify(user),
+        data: user,
       });
-      if (resp.status !== 200) {
-        const err = await resp.text();
-        throw err;
-      }
-      // success
       toast.success("User saved!");
       navigate("/users");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error("Failed to save user. Maybe they already exist?");
+      toast.error("Failed to save user: " + e.response.data);
       setSaving(false);
     }
   };

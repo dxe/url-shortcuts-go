@@ -34,41 +34,20 @@ export const ShortcutsPage = () => {
 
   const loadShortcuts = async () => {
     try {
-      // TODO: ensure cors works in prod
-      const resp = await axios.get(API_PATH + `/shortcuts?limit=${limit}&page=${page}&code=${searchCode}`, {withCredentials: true})
-      console.log(resp)
-
-      if (resp.status === 401) {
-        window.location.href = AUTH_PATH + "/login";
-        return;
-      }
-
+      const resp = await axios.get(
+        API_PATH + `/shortcuts?limit=${limit}&page=${page}&code=${searchCode}`,
+        { withCredentials: true }
+      );
       setShortcuts(resp.data.shortcuts);
       setTotal(resp.data.total_count);
-    } catch(e) {
-      toast.error("Failed to load shortcuts. Please try again.");
+    } catch (e: any) {
+      if (e.response.status === 401) {
+        window.location.href = AUTH_PATH + "/login";
+      }
+      toast.error("Failed to load shortcuts: " + e.response.data);
     } finally {
       setInitLoading(false);
     }
-
-    // try {
-    //   const resp = await fetch(
-    //     API_PATH + `/shortcuts?limit=${limit}&page=${page}&code=${searchCode}`,
-    //     {
-    //       // method: 'GET', // *GET, POST, PUT, DELETE, etc.
-    //       mode: "cors", // no-cors, *cors, same-origin
-    //       credentials: "include", // include, *same-origin, omit
-    //     }
-    //   );
-
-    //   const body = await resp.json();
-    //   setShortcuts(body.shortcuts);
-    //   setTotal(body.total_count);
-    // } catch (e) {
-    //   toast.error("Failed to load shortcuts. Please try again.");
-    // } finally {
-    //   setInitLoading(false);
-    // }
   };
 
   useEffect(() => {
@@ -94,7 +73,7 @@ export const ShortcutsPage = () => {
 
       {shortcuts &&
         shortcuts.map((s: Shortcut) => (
-          <ShortcutItem shortcut={s} onDelete={loadShortcuts} />
+          <ShortcutItem shortcut={s} onDelete={loadShortcuts} key={s.ID} />
         ))}
 
       <Pagination

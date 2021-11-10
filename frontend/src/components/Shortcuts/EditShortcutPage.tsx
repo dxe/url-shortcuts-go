@@ -5,6 +5,7 @@ import { Button, Form } from "react-bulma-components";
 import { Shortcut } from "./ShortcutsPage";
 import { toast } from "react-toastify";
 import { TitleBar } from "../common/TitleBar";
+import axios from "axios";
 
 export const EditShortcutPage = () => {
   const location = useLocation();
@@ -46,25 +47,16 @@ export const EditShortcutPage = () => {
     }
 
     try {
-      const resp = await fetch(API_PATH + `/shortcuts/${shortcut.ID || ""}`, {
-        headers: {
-          "Content-Type": "application/json",
-        },
+      await axios(API_PATH + `/shortcuts/${shortcut.ID ? shortcut.ID : ""}`, {
+        withCredentials: true,
         method: shortcut.ID ? "PUT" : "POST",
-        mode: "cors", // no-cors, *cors, same-origin
-        credentials: "include", // include, *same-origin, omit
-        body: JSON.stringify(shortcut),
+        data: shortcut,
       });
-      if (resp.status !== 200) {
-        const err = await resp.text();
-        throw err;
-      }
-      // success
       toast.success("Shortcut saved!");
       navigate("/");
-    } catch (e) {
+    } catch (e: any) {
       console.error(e);
-      toast.error("Failed to save shortcut. Maybe it already exists?");
+      toast.error("Failed to save shortcut: " + e.response.data);
       setSaving(false);
     }
   };

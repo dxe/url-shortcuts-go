@@ -5,6 +5,7 @@ import { Shortcut } from "../Shortcuts/ShortcutsPage";
 import { toast } from "react-toastify";
 import { TopShortcutsTable } from "./TopShortcutsTable";
 import { TitleBar } from "../common/TitleBar";
+import axios from "axios";
 
 interface TopShortcuts {
   today: Shortcut[];
@@ -17,19 +18,15 @@ export const VisitsPage = () => {
 
   const loadTopShortcuts = async () => {
     try {
-      const resp = await fetch(API_PATH + `/shortcuts/top`, {
-        // method: 'GET', // *GET, POST, PUT, DELETE, etc.
-        mode: "cors", // no-cors, *cors, same-origin
-        credentials: "include", // include, *same-origin, omit
+      const resp = await axios.get(API_PATH + `/shortcuts/top`, {
+        withCredentials: true,
       });
-      if (resp.status === 401) {
+      setTopShortcuts(resp.data);
+    } catch (e: any) {
+      if (e.response.status === 401) {
         window.location.href = AUTH_PATH + "/login";
-        return;
       }
-      const body = await resp.json();
-      setTopShortcuts(body);
-    } catch (e) {
-      toast.error("Failed to load top shortcuts. Please try again.");
+      toast.error("Failed to load top shortcuts: " + e.response.data);
     }
   };
 

@@ -18,7 +18,7 @@ export const TopShortcutsTable = (props: TopShortcutsTableProps) => {
         </thead>
         <tbody>
           {props.shortcuts?.map((s: Shortcut) => (
-            <tr>
+            <tr key={s.ID}>
               <td>{s.Code}</td>
               <td>{s.TotalVisits}</td>
             </tr>
