@@ -50,22 +50,20 @@ export const ShortcutsPage = () => {
     }
   };
 
+  const search = (val: string) => {
+    setPage(1);
+    setSearchCode(val);
+  };
+
   useEffect(() => {
     loadShortcuts();
     // TODO: look into this more to see if it's a problem
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page]);
-
-  useEffect(() => {
-    // Changing the page # will automatically trigger a reload w/ the new search value.
-    page === 1 ? loadShortcuts() : setPage(1);
-    // TODO: look into this more to see if it's a problem
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchCode]);
+  }, [page, searchCode]);
 
   return (
     <>
-      <TitleBar title="Shortcuts" onSearchSubmit={setSearchCode} />
+      <TitleBar title="Shortcuts" onSearchSubmit={search} />
 
       {!initLoading && shortcuts && shortcuts.length === 0 && (
         <Box>No shortcuts found.</Box>

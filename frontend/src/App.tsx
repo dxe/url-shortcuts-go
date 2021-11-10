@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import "./App.css";
 import "bulma/css/bulma.min.css";
 import { Navbar, Box, Menu, Columns } from "react-bulma-components";
-import { Routes, Route, Link, useLocation, NavLink } from "react-router-dom";
+import { Routes, Route, Link, useLocation } from "react-router-dom";
 import { Shortcut, ShortcutsPage } from "./components/Shortcuts/ShortcutsPage";
 import { EditShortcutPage } from "./components/Shortcuts/EditShortcutPage";
 import { VisitsPage } from "./components/Visits/VisitsPage";
@@ -120,7 +120,7 @@ export default function App() {
                     />
                     New User
                   </Link>
-                  <NavLink
+                  <Link
                     to={"/users"}
                     className={
                       currentRoute.pathname === "/users" ? "is-active" : ""
@@ -131,7 +131,7 @@ export default function App() {
                       style={{ marginRight: 10 }}
                     />
                     Manage Users
-                  </NavLink>
+                  </Link>
                 </Menu.List>
               )}
             </Menu>
