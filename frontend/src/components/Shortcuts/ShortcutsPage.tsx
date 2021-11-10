@@ -28,18 +28,18 @@ export const ShortcutsPage = () => {
   const [initLoading, setInitLoading] = useState(true);
   const [shortcuts, setShortcuts] = useState([] as Shortcut[]);
   const [searchCode, setSearchCode] = useState("");
-  const [total, setTotal] = useState(0);
-  const [page, setPage] = useState(1);
-  const limit = 5;
+  // TODO: combine these three things into a "paging" object
+  const [paging, setPaging] = useState({ total: 0, limit: 5, page: 1 });
 
   const loadShortcuts = async () => {
     try {
       const resp = await axios.get(
-        API_PATH + `/shortcuts?limit=${limit}&page=${page}&code=${searchCode}`,
+        API_PATH +
+          `/shortcuts?limit=${paging.limit}&page=${paging.page}&code=${searchCode}`,
         { withCredentials: true }
       );
       setShortcuts(resp.data.shortcuts);
-      setTotal(resp.data.total_count);
+      setPaging((prev) => ({ ...prev, total: resp.data.total_count }));
     } catch (e: any) {
       if (e.response.status === 401) {
         window.location.href = AUTH_PATH + "/login";
@@ -51,7 +51,7 @@ export const ShortcutsPage = () => {
   };
 
   const search = (val: string) => {
-    setPage(1);
+    setPaging((prev) => ({ ...prev, page: 1 }));
     setSearchCode(val);
   };
 
@@ -59,7 +59,7 @@ export const ShortcutsPage = () => {
     loadShortcuts();
     // TODO: look into this more to see if it's a problem
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [page, searchCode]);
+  }, [paging.page, searchCode]);
 
   return (
     <>
@@ -75,11 +75,11 @@ export const ShortcutsPage = () => {
         ))}
 
       <Pagination
-        current={page}
+        current={paging.page}
         showFirstLast
-        total={Math.ceil(total / limit)}
+        total={Math.ceil(paging.total / paging.limit)}
         onChange={(pageNum) => {
-          setPage(pageNum);
+          setPaging((prev) => ({ ...prev, page: pageNum }));
         }}
         className={"pt-4"}
       />
