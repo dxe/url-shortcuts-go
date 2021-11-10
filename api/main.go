@@ -195,6 +195,9 @@ func buildQueryString(campaign string, args ...url.Values) string {
 			output.Set(k, v[0])
 		}
 	}
+	if output.Get("utm_source") == "" {
+		output.Set("utm_source", "dxe-io")
+	}
 	output.Set("utm_campaign", "dxe-io-"+campaign)
 	return output.Encode()
 }

@@ -15,7 +15,7 @@ export class Shortcut {
   UpdatedAt?: string;
   UpdatedBy?: number;
   UpdatedByName?: string;
-  TotalVisits?: number; // only used for reporting, not always populated
+  TotalVisits?: number; // only used for reporting
 
   constructor() {
     this.ID = 0;
