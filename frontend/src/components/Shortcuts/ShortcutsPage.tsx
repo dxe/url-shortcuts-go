@@ -28,7 +28,6 @@ export const ShortcutsPage = () => {
   const [initLoading, setInitLoading] = useState(true);
   const [shortcuts, setShortcuts] = useState([] as Shortcut[]);
   const [searchCode, setSearchCode] = useState("");
-  // TODO: combine these three things into a "paging" object
   const [paging, setPaging] = useState({ total: 0, limit: 5, page: 1 });
 
   const loadShortcuts = async () => {
