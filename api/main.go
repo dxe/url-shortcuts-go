@@ -12,6 +12,7 @@ import (
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
+	"golang.org/x/sync/singleflight"
 
 	"github.com/dxe/url-shortcuts-go/model"
 	"github.com/go-chi/chi/v5"
@@ -19,6 +20,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/go-chi/jwtauth/v5"
 	"github.com/jmoiron/sqlx"
+	"github.com/patrickmn/go-cache"
 )
 
 type server struct {
@@ -27,6 +29,8 @@ type server struct {
 	db                *sqlx.DB
 	googleOauthConfig *oauth2.Config
 	tokenAuth         *jwtauth.JWTAuth
+	requestGroup      singleflight.Group
+	cache             *cache.Cache
 }
 
 func mustGetEnv(key string) string {
@@ -66,6 +70,7 @@ func main() {
 		db:                model.InitDBConn(mustGetEnv("DB_DSN")),
 		googleOauthConfig: googleOauthConfig,
 		tokenAuth:         jwtauth.New("HS256", []byte(mustGetEnv("JWT_SECRET")), nil),
+		cache:             cache.New(5*time.Second, 5*time.Minute),
 	}
 
 	r := chi.NewRouter()
@@ -138,11 +143,20 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	code := r.URL.Path[1:]
 	log.Printf("Code from request: %v\n", code)
 
-	shortcut, err := model.GetShortcutByCode(s.db, code)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
+	v, found := s.cache.Get(code)
+	if !found {
+		var err error
+		v, err, _ = s.requestGroup.Do(code, func() (interface{}, error) {
+			return model.GetShortcutByCode(s.db, code)
+		})
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		s.cache.Set(code, v, cache.DefaultExpiration)
 	}
+
+	shortcut := v.(model.Shortcut)
 	if shortcut.ID == 0 {
 		path := "http://directactioneverywhere.com/" + code // TODO: move domain to env
 		http.Redirect(w, r, path, http.StatusFound)
@@ -156,18 +170,21 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 	}
 
 	path.RawQuery = buildQueryString(code, path.Query(), r.URL.Query())
+
 	// TODO: ensure that we forward the Referer header
 	http.Redirect(w, r, path.String(), http.StatusFound)
 
-	if err := model.InsertVisit(s.db, model.Visit{
-		ShortcutID: shortcut.ID,
-		IPAddress:  r.RemoteAddr,
-		Path:       r.URL.String(),
-		Referer:    r.Header.Get("Referer"),
-		UserAgent:  r.Header.Get("User-Agent"),
-	}); err != nil {
-		log.Println(err)
-	}
+	go func() {
+		if err := model.InsertVisit(s.db, model.Visit{
+			ShortcutID: shortcut.ID,
+			IPAddress:  r.RemoteAddr,
+			Path:       r.URL.String(),
+			Referer:    r.Header.Get("Referer"),
+			UserAgent:  r.Header.Get("User-Agent"),
+		}); err != nil {
+			log.Println(err)
+		}
+	}()
 
 }
 
