@@ -13,14 +13,13 @@ type Visit struct {
 	IPAddress  string `db:"ip_address"`
 	Path       string `db:"path"`
 	Referer    string `db:"referer"`
-	UTMSource  string `db:"utm_source"`
 	UserAgent  string `db:"user_agent"`
 }
 
 func InsertVisit(db *sqlx.DB, visit Visit) error {
 	query := `
-		INSERT INTO visits (shortcut_id, ip_address, path, referer, utm_source, user_agent)
-		VALUES (:shortcut_id, :ip_address, :path, :referer, :utm_source, :user_agent) 
+		INSERT INTO visits (shortcut_id, ip_address, path, referer, user_agent)
+		VALUES (:shortcut_id, :ip_address, :path, :referer, :user_agent) 
 	`
 
 	_, err := sqlx.NamedExec(db, query, visit)
