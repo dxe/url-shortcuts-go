@@ -188,7 +188,7 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 
 func buildQueryString(r *http.Request, campaign string, args ...url.Values) string {
 	output := make(url.Values, 0)
-	// Merge URL query parameters, overwriting values from earlier args the later args.
+	// Merge URL query parameters, overwriting values from earlier args with later args.
 	for _, u := range args {
 		for k, v := range u {
 			output.Set(k, v[0])
