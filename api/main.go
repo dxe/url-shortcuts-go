@@ -178,6 +178,7 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 			IPAddress:  r.RemoteAddr,
 			Path:       r.URL.String(),
 			Referer:    r.Header.Get("Referer"),
+			UTMSource:  r.URL.Query().Get("utm_source"),
 			UserAgent:  r.Header.Get("User-Agent"),
 		}); err != nil {
 			log.Println(err)
