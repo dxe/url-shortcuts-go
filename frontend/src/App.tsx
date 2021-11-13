@@ -53,17 +53,16 @@ export default function App() {
     <div className="App">
       <Navbar colorVariant={"dark"} active={navbarActive}>
         <Navbar.Brand>
-          <Navbar.Item href={"/shortcuts"}>
-            <strong>DxE Shortcuts</strong>&nbsp;
-            <small>
-              <span style={{ color: "orange" }}>BETA</span>
-            </small>
+          <Navbar.Item style={{ cursor: "default" }}>
+            <strong>DxE Shortcuts</strong>
           </Navbar.Item>
           <Navbar.Burger onClick={() => setNavbarActive(!navbarActive)} />
         </Navbar.Brand>
         <Navbar.Menu>
           <Navbar.Container align="right">
-            <Navbar.Item>{loggedInUser?.Name}</Navbar.Item>
+            <Navbar.Item style={{ cursor: "default" }}>
+              {loggedInUser?.Name}
+            </Navbar.Item>
             <Navbar.Item href={AUTH_PATH + "/logout"}>Log out</Navbar.Item>
           </Navbar.Container>
         </Navbar.Menu>
