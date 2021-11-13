@@ -80,7 +80,6 @@ func main() {
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.Timeout(30 * time.Second))
 
-	// TODO: modify these options if needed
 	r.Use(cors.Handler(cors.Options{
 		AllowedOrigins:   []string{"https://dxe.io", "http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
@@ -169,9 +168,8 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	path.RawQuery = buildQueryString(code, path.Query(), r.URL.Query())
+	path.RawQuery = buildQueryString(r, code, path.Query(), r.URL.Query())
 
-	// TODO: ensure that we forward the Referer header
 	http.Redirect(w, r, path.String(), http.StatusFound)
 
 	go func() {
@@ -188,15 +186,21 @@ func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func buildQueryString(campaign string, args ...url.Values) string {
+func buildQueryString(r *http.Request, campaign string, args ...url.Values) string {
 	output := make(url.Values, 0)
+	// Merge URL query parameters, overwriting values from earlier args the later args.
 	for _, u := range args {
 		for k, v := range u {
 			output.Set(k, v[0])
 		}
 	}
 	if output.Get("utm_source") == "" {
-		output.Set("utm_source", "dxe-io")
+		switch referer := r.Header.Get("Referer"); referer {
+		case "":
+			output.Set("utm_source", "dxe-io")
+		default:
+			output.Set("utm_source", referer)
+		}
 	}
 	if output.Get("utm_medium") == "" {
 		output.Set("utm_medium", "shortlink")
