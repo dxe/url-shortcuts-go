@@ -90,6 +90,19 @@ func (s *server) deleteUser(w http.ResponseWriter, r *http.Request) {
 
 func (s *server) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 	user := mustGetUserFromCtx(r.Context())
+	// Confirm that the user is still active in the database, otherwise a user might
+	// still have access after being removed
+	if s.prod {
+		userFromDB, err := model.FindUserByEmail(s.db, user.Email)
+		if err != nil {
+			http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+			return
+		}
+		if !userFromDB.Active {
+			s.handleLogout(w, r)
+			return
+		}
+	}
 	writeJSON(w, map[string]interface{}{
 		"user": user,
 	})
