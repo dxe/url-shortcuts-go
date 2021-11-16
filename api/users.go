@@ -99,7 +99,7 @@ func (s *server) getCurrentUser(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if !userFromDB.Active {
-			s.handleLogout(w, r)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 	}
