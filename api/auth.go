@@ -248,7 +248,6 @@ func nonce() (string, error) {
 }
 
 func isDxeEmail(address string) bool {
-	components := strings.Split(address, "@")
-	_, domain := components[0], components[1]
-	return domain == "directactioneverywhere.com"
+	const domain = "directactioneverywhere.com"
+	return strings.HasSuffix(address, domain)
 }
