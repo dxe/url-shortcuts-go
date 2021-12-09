@@ -83,7 +83,7 @@ export const EditShortcutPage = () => {
               onChange={(evt) =>
                 setShortcut((prev) => ({
                   ...prev,
-                  Code: evt.target.value.toLowerCase(),
+                  Code: evt.target.value.toLowerCase().trim(),
                 }))
               }
             />
@@ -100,7 +100,7 @@ export const EditShortcutPage = () => {
               type="text"
               value={shortcut.URL}
               onChange={(evt) =>
-                setShortcut((prev) => ({ ...prev, URL: evt.target.value }))
+                setShortcut((prev) => ({ ...prev, URL: evt.target.value.trim() }))
               }
               onKeyPress={(e) => {
                 if (e.key === "Enter") save();
