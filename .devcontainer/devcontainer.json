@@ -6,12 +6,12 @@
 	"image": "mcr.microsoft.com/devcontainers/go:2-1.26-trixie",
 	// Features to add to the dev container. More info: https://containers.dev/features.
 	"features": {
-		"ghcr.io/devcontainers/features/node:2": {},
+		"ghcr.io/devcontainers/features/node:": {},
 		"ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store:1": {}
 	},
 	// mount-pnpm-store requires pnpm to be installed first
 	"overrideFeatureInstallOrder": [
-		"ghcr.io/devcontainers/features/node:2",
+		"ghcr.io/devcontainers/features/node:",
 		"ghcr.io/joshuanianji/devcontainer-features/mount-pnpm-store"
 	],
 	// Workaround: the pnpm feature adds pnpm to PATH only for interactive
