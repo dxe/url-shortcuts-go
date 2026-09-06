@@ -34,3 +34,27 @@ jobs:
           tags: |
             ${{ steps.login-ecr.outputs.registry }}/dxe/url-shortcuts-frontend:latest
             ${{ steps.login-ecr.outputs.registry }}/dxe/url-shortcuts-frontend:${{ steps.sha.outputs.short }}
+
+  # Dispatches deploy-ecs.yml in dxe/terraform, which bumps this service's image
+  # tag. No AWS creds here, and it does not wait — apply-deploy.yml alerts on failure.
+  deploy:
+    needs: deploy-frontend
+    if: ${{ github.event_name == 'push' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/create-github-app-token@v3
+        id: token
+        with:
+          client-id: ${{ secrets.DEPLOY_APP_CLIENT_ID }}
+          private-key: ${{ secrets.DEPLOY_APP_PRIVATE_KEY }}
+          owner: dxe
+          repositories: terraform
+
+      - name: Trigger the deploy
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          gh workflow run deploy-ecs.yml --repo dxe/terraform \
+            -f service=url-shortcuts-frontend \
+            -f tag="${GITHUB_SHA::7}" \
+            -f caller_run_id=${{ github.run_id }}
