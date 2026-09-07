@@ -81,7 +81,8 @@ func main() {
 	r.Use(middleware.Timeout(30 * time.Second))
 
 	r.Use(cors.Handler(cors.Options{
-		AllowedOrigins:   []string{"https://dxe.io", "http://localhost:3000"},
+		// Prod is same-origin (shortcuts.dxe.io via CloudFront), so no CORS origin needed there.
+		AllowedOrigins:   []string{"http://localhost:3000"},
 		AllowedMethods:   []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
 		ExposedHeaders:   []string{"Link"},
@@ -221,10 +222,10 @@ func writeJSON(w http.ResponseWriter, data interface{}) {
 
 func (s *server) homepagePath() string {
 	const (
-		// In prod, this redirects to the frontend server via the load balancer.
-		pathProd = "/shortcuts"
+		// In prod, this redirects to the CloudFront-hosted app on this same host.
+		pathProd = "/"
 		// In development, this redirects to the React dev server.
-		pathLocal = "http://localhost:3000/shortcuts" // TODO: move port to env
+		pathLocal = "http://localhost:3000" // TODO: move port to env
 	)
 	if s.prod {
 		return pathProd

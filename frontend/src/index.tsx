@@ -9,7 +9,7 @@ document.title = "DxE Shortcuts";
 
 ReactDOM.render(
   <React.StrictMode>
-    <BrowserRouter basename={"/shortcuts"}>
+    <BrowserRouter>
       <App />
     </BrowserRouter>
   </React.StrictMode>,
