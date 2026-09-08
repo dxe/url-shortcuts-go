@@ -18,43 +18,22 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-west-2
-      - name: Login to Amazon ECR
-        id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
-      - name: Short commit sha
-        id: sha
-        run: echo "short=${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
-
-      - name: Build and push image to ECR
-        uses: docker/build-push-action@v5
+      - name: Set up Node
+        uses: actions/setup-node@v4
         with:
-          context: ./frontend
-          file: ./frontend/Dockerfile
-          push: true
-          tags: |
-            ${{ steps.login-ecr.outputs.registry }}/dxe/url-shortcuts-frontend:latest
-            ${{ steps.login-ecr.outputs.registry }}/dxe/url-shortcuts-frontend:${{ steps.sha.outputs.short }}
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: frontend/yarn.lock
 
-  # Dispatches deploy-ecs.yml in dxe/terraform, which bumps this service's image
-  # tag. No AWS creds here, and it does not wait — apply-deploy.yml alerts on failure.
-  deploy:
-    needs: deploy-frontend
-    if: ${{ github.event_name == 'push' }}
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/create-github-app-token@v3
-        id: token
-        with:
-          client-id: ${{ secrets.DEPLOY_APP_CLIENT_ID }}
-          private-key: ${{ secrets.DEPLOY_APP_PRIVATE_KEY }}
-          owner: dxe
-          repositories: terraform
+      - name: Install dependencies
+        working-directory: frontend
+        run: yarn install --frozen-lockfile
+      - name: Build
+        working-directory: frontend
+        run: yarn build
 
-      - name: Trigger the deploy
-        env:
-          GH_TOKEN: ${{ steps.token.outputs.token }}
-        run: |
-          gh workflow run deploy-ecs.yml --repo dxe/terraform \
-            -f service=url-shortcuts-frontend \
-            -f tag="${GITHUB_SHA::7}" \
-            -f caller_run_id=${{ github.run_id }}
+      - name: Sync to S3
+        working-directory: frontend
+        run: aws s3 sync build/ s3://shortcuts.dxe.io/ --delete
+      - name: Invalidate CloudFront cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION }} --paths '/*'
