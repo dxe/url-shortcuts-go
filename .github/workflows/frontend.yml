@@ -21,7 +21,8 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # react-scripts 4 does not run on Node 17+; it dies in postcss.
+          node-version: 16
           cache: yarn
           cache-dependency-path: frontend/yarn.lock
 
