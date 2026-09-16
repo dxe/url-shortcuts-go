@@ -140,7 +140,8 @@ func (s *server) handleHealthcheck(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *server) handleRedirect(w http.ResponseWriter, r *http.Request) {
-	code := r.URL.Path[1:]
+	// Trim both ends: dxe.io/join/ and dxe.io/join are the same shortcut.
+	code := strings.Trim(r.URL.Path, "/")
 	log.Printf("Code from request: %v\n", code)
 
 	v, found := s.cache.Get(code)
